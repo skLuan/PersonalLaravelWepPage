@@ -59,16 +59,24 @@ class CurriculumVitae extends Controller
     public function retriveDatabase($id) {
         return $this->notionInstance->database($id)->query()->asCollection();
     }
+    public function getMainPage(){
+        $tempBlockId = $this->blockIds;
+        return $this->retrivePage($tempBlockId['mainPage']);
+    }
 
     public function getTitle() {
-        $tempBlockId = $this->blockIds;
-        $mainpage = $this->retrivePage($tempBlockId['mainPage']);
+        $mainpage = $this->getMainPage();
         return $mainpage->getTitle();
+    }
+    public function getMainImage() {
+        $mainpage = $this->getMainPage();
+        return $mainpage->getCover();
     }
 
     // ------------------------------------------------------------------- Render de la web
     public function show() {
         $mainpage = $this->getTitle();
+        $imgCover = $this->getMainImage();
         $info = $this->index();
         $childrenInfo = '';
         $tempBlockId = $this->blockIds;
@@ -83,6 +91,7 @@ class CurriculumVitae extends Controller
         return view('home')->with('notionInfo', $info)
         ->with('childrenInfo', $childrenInfo)
         ->with('laborInfo', $laborInfo)
-        ->with('title', $mainpage);
+        ->with('title', $mainpage)
+        ->with('cover', $imgCover);
     }
 }
