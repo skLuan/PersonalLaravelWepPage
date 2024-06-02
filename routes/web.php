@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\CurriculumVitae;
 use App\Http\Controllers\ProfileController;
+use App\Providers\NotionService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,9 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [CurriculumVitae::class, 'show']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');
