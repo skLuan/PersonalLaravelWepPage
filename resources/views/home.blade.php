@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Luan Erazo Portfolio</title>
+    <title>Luan Erazo Website</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -44,7 +44,7 @@
                             @break
 
                             @case('paragraph')
-                                <p class="text-white p-2">  {{ $block->asText() }} </p>
+                                <p class="p-2 text-white">  {{ $block->asText() }} </p>
                             @break
 
                             @default   <p class="text-white">  {{ $block->asText() }} </p>
@@ -53,18 +53,21 @@
                     @endforeach
                 </div>
             </div>
-            <div>
-
-            </div>
         </article>
+        <article>
+                        @php
+                            // dd($laborInfo);
+                        @endphp
+            @foreach ($laborInfo as $labor)
+                <div>
+                    <p>
+                    </p>
+                </div>
+            @endforeach
+        </article>
+
     </section>
-    <div>
-        @php
-            // dd($title);
-            // dd($childrenInfo);
-            // dd($notionInfo);
-        @endphp
-    </div>
+    <section></section>
 </body>
 
 </html>
