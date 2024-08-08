@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Providers\NotionService;
 use FiveamCode\LaravelNotionApi\Notion;
+use FiveamCode\LaravelNotionApi\Query\Filters\Filter;
+use FiveamCode\LaravelNotionApi\Query\Filters\Operators;
 
 class CurriculumVitae extends Controller
 {
@@ -19,6 +21,8 @@ class CurriculumVitae extends Controller
             'mainPage' => env('NOTION_CURRICULUM_VITAE_ID'),
             'principal' => 'be694f82-eff2-4dac-80aa-537a518712f2', // Este es blocke interno principal, contiene los dos columnas
             'experienciaLaboral' => '35fe5f49-98a1-4404-878c-e4d4751c8ab4', // Este es de la data base de los trabajos que he hecho
+            //'journal' => '275288a9-dff7-40d6-b1cf-53450717dc26',
+            'journal' => '275288a9-dff7-40d6-b1cf-53450717dc26'
         ];
     }
 
@@ -44,6 +48,12 @@ class CurriculumVitae extends Controller
     public function retriveBlockChildren($id) {
         return  $this->notionInstance->block($id)->children()->withUnsupported()->asCollection();
     }
+    // -------------------------------------------------------- Retorna los hijos de un bloque como texto
+    public function retriveBlockChildrenText($id, $amount = null) {
+        $amount === null ? $blocks = $this->notionInstance->block($id)->children()->withUnsupported()->asTextCollection():
+        $blocks = $this->notionInstance->block($id)->limit($amount)->children()->withUnsupported()->asTextCollection();
+        return $blocks;
+    }
 
     // -------------------------------------------------------- Retorna los hijos de un bloque como colección
     public function retriveBlock($id) {
@@ -57,11 +67,26 @@ class CurriculumVitae extends Controller
 
     // ------------------------------------------------- Retorna Todas las paginas de una data base
     public function retriveDatabase($id) {
-        return $this->notionInstance->database($id)->query()->asCollection();
+        return $this->notionInstance->databases()->find($id);
+    }
+    // ------------------------------------------------- Retorna Todas las paginas de una data base
+    public function retriveDatabaseCollection($id) {
+        return $this->notionInstance->database($id);
     }
     public function getMainPage(){
         $tempBlockId = $this->blockIds;
         return $this->retrivePage($tempBlockId['mainPage']);
+    }
+    public function getBlogPage(){
+        $tempBlockId = $this->blockIds;
+        return $this->retriveDatabaseCollection($tempBlockId['journal'])->query()->asCollection();
+    }
+    public function getBlogPagePublic(){
+        $tempBlockId = $this->blockIds;
+        return $this->retriveDatabaseCollection($tempBlockId['journal'])->query()->asCollection()->filter(function($item, $key){
+            //return $item->getProperty('Xt|v');
+            return $item->getProperty('Is Published')->isChecked();
+        });
     }
 
     public function getTitle() {
@@ -81,7 +106,7 @@ class CurriculumVitae extends Controller
         $childrenInfo = '';
         $tempBlockId = $this->blockIds;
 
-        $laborInfo = $this->retriveDatabase($tempBlockId['experienciaLaboral']);
+        $laborInfo = $this->retriveDatabaseCollection($tempBlockId['experienciaLaboral']);
         try {
             $childrenInfo = $this->retriveBlockChildren($info[1]->getId());
             //code...
@@ -93,5 +118,37 @@ class CurriculumVitae extends Controller
         ->with('laborInfo', $laborInfo)
         ->with('title', $mainpage)
         ->with('cover', $imgCover);
+    }
+    public function showBlog() {
+        $tempBlockId = $this->blockIds;
+        $metaInfo = $this->retriveDatabase($tempBlockId['journal']);
+        // $mainpage = "o";
+        // $imgCover = "o";
+        $mainpage = $metaInfo->getTitle();
+        $imgCover = $metaInfo->getCover();
+
+        $info = $this->getBlogPagePublic();
+        $firstChild = $this->retriveBlockChildrenText($info->first()->getId(),1);
+        return view('blog')->with('notionInfo', $info)
+        ->with('title', $mainpage)
+        ->with('cover', $imgCover)
+        ->with('firstChild', $firstChild->first())
+        ->with('metaInfo', $metaInfo);
+    }
+
+    public function showBlogPost() {
+        $imgCover = $this->getMainImage();
+        $info = $this->index();
+        $childrenInfo = '';
+        $tempBlockId = $this->blockIds;
+
+        $laborInfo = $this->retriveDatabaseCollection($tempBlockId['experienciaLaboral']);
+        try {
+            $childrenInfo = $this->retriveBlockChildren($info[1]->getId());
+            //code...
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        return view('blogpost')->with('notionInfo', $info);
     }
 }

@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [CurriculumVitae::class, 'show']);
+Route::get('/blog', [CurriculumVitae::class, 'showBlog']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');

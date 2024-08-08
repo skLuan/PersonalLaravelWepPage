@@ -18,9 +18,10 @@
     <section class="p-10">
         <figure class="overflow-hidden lg:max-h-96">
             <picture>
-                <img class="-translate-y-1/4" src="{{$cover}}" alt="">
+                <img class="-translate-y-1/4" src="{{ $cover }}" alt="">
             </picture>
         </figure>
+        <x-three-canvas />
         <article class="grid grid-cols-2">
             <div>
 
@@ -44,10 +45,11 @@
                             @break
 
                             @case('paragraph')
-                                <p class="p-2 text-white">  {{ $block->asText() }} </p>
+                                <p class="p-2 text-white"> {{ $block->asText() }} </p>
                             @break
 
-                            @default   <p class="text-white">  {{ $block->asText() }} </p>
+                            @default
+                                <p class="text-white"> {{ $block->asText() }} </p>
                             @break
                         @endswitch
                     @endforeach
@@ -55,9 +57,9 @@
             </div>
         </article>
         <article>
-                        @php
-                            // dd($laborInfo);
-                        @endphp
+            @php
+                // dd($laborInfo);
+            @endphp
             @foreach ($laborInfo as $labor)
                 <div>
                     <p>
