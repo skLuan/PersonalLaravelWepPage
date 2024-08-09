@@ -15,13 +15,13 @@
 </head>
 
 <body class="antialiased bg-black">
-    <section class="p-10">
+    <section class="p-1">
         <figure class="overflow-hidden lg:max-h-96">
             <picture>
                 <img class="-translate-y-1/4" src="{{ $cover }}" alt="">
             </picture>
         </figure>
-        <div class="grid grid-cols-2">
+        <div class="p-1">
             <div>
 
                 <h2 class="text-white">
