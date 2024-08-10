@@ -33,30 +33,23 @@ class World {
     container.append(renderer.domElement);
     // -------------------------------- Lights    
     light = createDirectionalLight(8);
-    light.position.set(0,5,1);
+    light.position.set(-10,16,0);
     camera.add(light);
 
     const {ambientLight, hemisphereLight } = createAmbientLight(8, 5);
     const pointLightOne = createPointLight();
     // -------------------------------- Loop Init    
     loop = new Loop(camera, scene,renderer);
-    // ----------------------------------------------- Group
-    const groupCircles = createMeshGroup();
     // -------------------------------- Controls    
     const controls = createControls(camera, renderer.domElement);
     // -------------------------------- Meshes    
-    const cube = new createCube();
-    const basicCube = new createCube("white","/assets/textures/uv-test-col.png");
-    const sphere = new createSphere();
+    const cube = new createCube("purple");
     cubeGroup = createGroup();
-    basicCube.position.set(1.5, 0, 0);
-    sphere.position.set(0,0,2)
-    basicCube.add(sphere);
     cube.position.set(-1.5, 0, 0);
-    cubeGroup.add(cube, basicCube);
-
-    loop.updatables.push(controls, groupCircles);
-    scene.add(camera, hemisphereLight, groupCircles, helper);
+    cubeGroup.add(cube);
+    camera.position.x = -6;
+    loop.updatables.push(controls, cubeGroup);
+    scene.add(camera, cubeGroup, hemisphereLight, helper);
     // scene.add(sphere);
 
     const resizer = new Resizer(container, camera, renderer);

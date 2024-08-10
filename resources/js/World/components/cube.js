@@ -36,7 +36,7 @@ function miniCube() {
 
 function createCube(
   _color = "cornsilk",
-  texture = "/assets/textures/uv-test-bw.png"
+  texture = null
 ) {
   const material = createMaterial(_color, texture);
   const geometry = new BoxGeometry(_mt, _mt, _mt);
@@ -58,7 +58,7 @@ function createCube(
     }
   });
 
-  cube.rotation.set(gradosARadianes(45), gradosARadianes(45), 0);
+  cube.rotation.set(0, gradosARadianes(45), 0);
   cube.add(miniCube());
   // cube.rotateZ(gradosARadianes(45));
   return cube;

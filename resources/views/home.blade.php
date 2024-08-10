@@ -15,16 +15,14 @@
 </head>
 
 <body class="antialiased bg-black pb-12">
-    <x-three-canvas />
     <section class="mx-1">
         {{-- <figure class="overflow-hidden lg:max-h-96">
             <picture>
                 <img class="-translate-y-1/4" src="{{ $cover }}" alt="">
             </picture>
         </figure> --}}
-        <article class="p-4 rounded-sm bg-gray-950 bg-opacity-90">
+        <article class="p-4 rounded-sm bg-gray-950 bg-opacity-90">            
             <div>
-
                 <h2 class="text-white">
                     {{ $title }}
                 </h2>
@@ -53,6 +51,9 @@
                 </div>
             </div>
         </article>
+    </section>
+    <section class="h-[300px]">
+        <x-three-canvas />
     </section>
 
     <section class="m-1">

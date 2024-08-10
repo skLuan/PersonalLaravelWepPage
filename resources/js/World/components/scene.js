@@ -3,11 +3,11 @@ import {
   Scene,
 } from "three";
 
-function createScene(){
-const _color = 'skyblue';
+function createScene(color = null){
+const _color = color;
 
 const scene = new Scene();
-scene.background = new Color(_color);
+scene.background = _color !== null? new Color(_color) : _color;
 return scene;
 }
 export {createScene}
