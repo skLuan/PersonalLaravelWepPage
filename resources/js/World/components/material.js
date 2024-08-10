@@ -1,4 +1,4 @@
-import { TextureLoader, MeshStandardMaterial } from "/node_modules/three/build/three.module.js";
+import { TextureLoader, MeshStandardMaterial } from "three";
 function createMaterial(_color = null, _map = null) {
   const textureLoader = new TextureLoader();
   // create a texture loader.

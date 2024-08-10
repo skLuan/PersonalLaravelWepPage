@@ -3,12 +3,9 @@ import {
   MeshMatcapMaterial,
   MeshStandardMaterial,
   BoxGeometry,
-  MathUtils,
-} from "/node_modules/three/build/three.module.js";
+  MathUtils
+} from "three";
 import { createMaterial, loadTexture } from "./material.js";
-function gradosARadianes(grados) {
-  return MathUtils.degToRad(grados);
-}
 const _mt = 1.5;
 
 function miniCube() {
@@ -21,7 +18,7 @@ function miniCube() {
   const miniCube = new Mesh(geometryMini, materialMini);
 
   miniCube.position.set(0, 2, 0);
-  miniCube.rotation.set(gradosARadianes(30), 0, -1);
+  miniCube.rotation.set(MathUtils.degToRad(30), 0, -1);
 
   miniCube.tick = (delta) => {
     const rotation = gradosARadianes(360);
@@ -43,7 +40,7 @@ function createCube(
   const cube = new Mesh(geometry, material);
 
   cube.tick = (delta) => {
-    const rotation = gradosARadianes(3.6);
+    const rotation = MathUtils.degToRad(3.6);
     cube.rotation.z += rotation * delta;
     cube.rotation.x += rotation * delta;
     cube.rotation.y += rotation * delta;
@@ -58,8 +55,7 @@ function createCube(
     }
   });
 
-  cube.rotation.set(0, gradosARadianes(45), 0);
-  cube.add(miniCube());
+  cube.rotation.set(0, MathUtils.degToRad(45), 0);
   // cube.rotateZ(gradosARadianes(45));
   return cube;
 }
@@ -93,8 +89,8 @@ function createBasicCube() {
   const material = new MeshMatcapMaterial();
   const geometry = new BoxGeometry(_mt, _mt, _mt);
   const cube = new Mesh(geometry, material);
-  cube.rotateX(gradosARadianes(45));
-  cube.rotateY(gradosARadianes(45));
+  cube.rotateX(MathUtils.degToRad(45));
+  cube.rotateY(MathUtils.degToRad(45));
   return cube;
 }
 

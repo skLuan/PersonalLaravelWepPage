@@ -1,3 +1,3 @@
-<div id="scene-container" class="h-full w-full">
+<div id="scene-container" class="h-full w-full fixed -z-10">
     <!-- Our <canvas> will be inserted here -->
 </div>

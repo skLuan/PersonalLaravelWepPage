@@ -1,5 +1,5 @@
 import { createCamera } from "./components/camera.js";
-import { createCube, createBasicCube, miniCube } from "./components/cube.js";
+import { createCube, createBasicCube } from "./components/cube.js";
 import { createSphere } from "./components/sphere.js";
 import { createScene } from "./components/scene.js";
 import {
@@ -14,6 +14,7 @@ import { helpers } from "./systems/helpers.js";
 import { Resizer } from "./systems/Resizer.js";
 import { Loop } from "./systems/Loop.js";
 import { createGroup, createMeshGroup } from "./components/meshGroup.js";
+import { MathUtils } from "three";
 //import { loadBirds } from "./components/birds/birds.js";
 
 let camera;
@@ -44,12 +45,12 @@ class World {
     const controls = createControls(camera, renderer.domElement);
     // -------------------------------- Meshes    
     const cube = new createCube("purple");
-    cubeGroup = createGroup();
-    cube.position.set(-1.5, 0, 0);
-    cubeGroup.add(cube);
-    camera.position.x = -6;
-    loop.updatables.push(controls, cubeGroup);
-    scene.add(camera, cubeGroup, hemisphereLight, helper);
+    // cubeGroup = createGroup();
+    // cubeGroup.add(cube);
+    camera.position.y = 20;
+    camera.rotateY(MathUtils.degToRad(90));
+    loop.updatables.push(controls, cube);
+    scene.add(camera, cube, hemisphereLight, helper);
     // scene.add(sphere);
 
     const resizer = new Resizer(container, camera, renderer);
