@@ -22,7 +22,7 @@ class Loop {
         this.renderer.setAnimationLoop(null);
     }
     tick() {
-const delta = clock.getDelta();
+    const delta = clock.getDelta();
         for(const object of this.updatables) {
             object.tick(delta);
         }

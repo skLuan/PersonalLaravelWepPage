@@ -16,8 +16,22 @@
 
 <body class="antialiased bg-black pb-12">
     <x-three-canvas />
-    <section class="mx-1">
+    <section class="m-2 mx-4 lg:w-10/12 lg:mx-auto">
+        <div class="p-2 flex flex-col justify-end text-right">
+            <span>David
+            </span>
+            <H2 class="pt-2">Luan Erazo</H2>
+            <div class="m-4 flex flex-col ">
+                <span>Interactive Designer</span>
+                <span>Web Development</span>
+            </div>
+        </div>
 
+        <div class="mt-40">
+            <h4>Creador digital, “tech savvy”</h4>
+            <p>Ciencia, viajar, conocer, ser curioso, soñando despierto con creatividad. soy un diseñador de medios
+                interactivos y un entusiasta de la cien..</p>
+        </div>
         {{-- <article class="p-4 rounded-sm bg-gray-950 bg-opacity-90">            
             <div>
                 <h2 class="text-white">
