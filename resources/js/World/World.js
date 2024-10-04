@@ -16,6 +16,7 @@ import { Loop } from "./systems/Loop.js";
 import { createGroup, createMeshGroup } from "./components/meshGroup.js";
 import { MathUtils } from "three";
 import * as YUKA from "yuka";
+import * as THREE from "three";
 //import { loadBirds } from "./components/birds/birds.js";
 
 let camera;
@@ -45,7 +46,7 @@ class World {
         // -------------------------------- Controls
         const controls = createControls(camera, renderer.domElement);
         // -------------------------------- Meshes
-        const cone = new createCone("purple", 0.5, 20);
+        const cone = new createCone("purple", 0.2, 1.3);
         // cubeGroup = createGroup();
         // cubeGroup.add(cube);
         camera.position.y = 20;
@@ -81,9 +82,22 @@ class World {
         vehicle.position.copy(path.current());
         const followPathBehivor = new YUKA.FollowPathBehavior(path, 0.5);
         vehicle.steering.add(followPathBehivor);
+        const onPathBehavior = new YUKA.OnPathBehavior(path);
+        vehicle.steering.add(onPathBehavior);
 
         const entityManager = new YUKA.EntityManager();
         entityManager.add(vehicle);
+
+        const position = [];
+        for (let i = 0; i < path._waypoints.length; i++) {
+            const waypoint = path._waypoints[i];
+            position.push(waypoint.x, waypoint.y,waypoint.z)
+        }
+        const lineGeometry = new THREE.BufferGeometry();
+        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position,3))
+        const lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff})
+        const lines = new THREE.LineLoop(lineGeometry, lineMaterial)
+        scene.add(lines);
 
         const time = new YUKA.Time();
 
