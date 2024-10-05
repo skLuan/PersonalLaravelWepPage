@@ -3,6 +3,7 @@
 use App\Http\Controllers\CurriculumVitae;
 use App\Http\Controllers\ProfileController;
 use App\Providers\NotionService;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,8 +17,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [CurriculumVitae::class, 'show']);
-Route::get('/blog', [CurriculumVitae::class, 'showBlog']);
+Route::get('/', function () {
+    return redirect('inWork');
+});
+Route::get('/blog', function() {
+    return redirect('https://erazoluan.notion.site/Blog-060c7617bd494cbbbd7badfff7afbe35');
+})->name('blog');
+//Route::get('/blog/inWork', [CurriculumVitae::class, 'showBlog']);
+Route::get('/inWork', function () {
+    return view('inWork');
+});
+Route::get('/portfolio', function () {
+    return redirect('https://erazoluan.notion.site/Professional-Life-113cff97a3d780a59e0fdb59a1263a1e');
+})->name('portfolio');
+
+
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
