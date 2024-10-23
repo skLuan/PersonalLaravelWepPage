@@ -23,7 +23,7 @@ Route::get('/', function () {
 Route::get('/blog', function() {
     return redirect('https://erazoluan.notion.site/Blog-060c7617bd494cbbbd7badfff7afbe35');
 })->name('blog');
-//Route::get('/blog/inWork', [CurriculumVitae::class, 'showBlog']);
+Route::get('/blog/inWork', [CurriculumVitae::class, 'showBlog']);
 Route::get('/inWork', function () {
     return view('inWork');
 });

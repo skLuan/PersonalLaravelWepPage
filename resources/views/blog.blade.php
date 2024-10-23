@@ -10,9 +10,17 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GOOGLE_TAG_ID') }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', '{{ env('GOOGLE_TAG_ID') }}');
+</script>
 
 <body class="antialiased bg-black">
     <section class="p-1">
@@ -28,7 +36,7 @@
                     {{ $title }}
                 </h2>
                 @php
-                  // dd($notionInfo);
+                    // dd($notionInfo);
                 @endphp
                 @foreach ($notionInfo as $item)
                     <article class="">
@@ -37,10 +45,11 @@
                                 {{ $item->getTitle() }}
                             </h5>
                             <p class="p-4">
-                                {{ $firstChild}}
+                                {{ $firstChild }}
                             </p>
-                            <a class="p-4 flex text-right" href={{$item->getUrl()}} target="_blank" rel="noopener noreferrer">Leer en notion</a>
-                        </div>  
+                            <a class="p-4 flex text-right" href={{ $item->getUrl() }} target="_blank"
+                                rel="noopener noreferrer">Leer en notion</a>
+                        </div>
                     </article>
                 @endforeach
             </div>
