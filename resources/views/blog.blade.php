@@ -10,52 +10,78 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap"
+        rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GOOGLE_TAG_ID') }}"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    window.dataLayer = window.dataLayer || [];
 
-  gtag('config', '{{ env('GOOGLE_TAG_ID') }}');
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+
+    gtag('config', '{{ env('GOOGLE_TAG_ID') }}');
 </script>
 
-<body class="antialiased bg-black">
-    <section class="p-1">
-        <figure class="overflow-hidden lg:max-h-96">
-            <picture>
-                <img class="-translate-y-1/4" src="{{ $cover }}" alt="">
-            </picture>
-        </figure>
-        <div class="p-1">
-            <div>
-
-                <h2 class="text-white">
-                    {{ $title }}
+<body class="antialiased bg-skl-black font-skl-nunito">
+    <div class="container max-w-screen-2xl mx-auto px-4">
+        <section class="" id="heroOne">
+            <article class="w-1/2 mx-auto p-12">
+                <h3>Reflexiones sobre existir como humano.</h3>
+                <p>Humanos arraigados al tiempo y no a la materia.</p>
+            </article>
+            <figure class="w-full relative">
+                <picture>
+                    <img class="" width="100%" src="/imgs/hero1.jpg" alt="">
+                </picture>
+                <h2 class="text-skl-white-true bg-skl-black px-20 py-10 my-12 absolute top-0">
+                    Blog
                 </h2>
-                @php
-                    // dd($notionInfo);
-                @endphp
-                @foreach ($notionInfo as $item)
-                    <article class="">
-                        <div class="p-4 my-4 bg-gray-700 rounded-sm">
-                            <h5 class="font-bold text-xl">
-                                {{ $item->getTitle() }}
-                            </h5>
-                            <p class="p-4">
-                                {{ $firstChild }}
-                            </p>
-                            <a class="p-4 flex text-right" href={{ $item->getUrl() }} target="_blank"
-                                rel="noopener noreferrer">Leer en notion</a>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    <section></section>
+            </figure>
+        </section>
+        <section class="p-1 grid grid-cols-3 gap-6" id="blogCards">
+            @php
+                // dd($notionInfo);
+            @endphp
+            @foreach ($notionInfo as $item)
+                <article class="">
+                    <figure class="w-full max-h-32 overflow-hidden">
+                        <picture>
+                            <img class="relative -translate-y-1/2" src={{ $item->getCover() }} alt="">
+                        </picture>
+                    </figure>
+                    <h5 class="font-bold text-xl pt-4 pb-2 px-2 text-skl-white-pink">
+                        {{ $item->getTitle() }}
+                    </h5>
+                    <div class="p-2 rounded-sm">
+                        <p class="">
+                            @php
+                                // $blocks = $this->notionInstance
+                                //     ->block($id)
+                                //     ->limit($amount)
+                                //     ->children()
+                                //     ->withUnsupported()
+                                //     ->asTextCollection();
+
+                                $infoCard = Notion::block($item->getID())->limit(1)->children()->asTextCollection();
+
+                            @endphp
+                            {{ $infoCard }}
+                        </p>
+                        <a class="p-4 flex text-right" href={{ $item->getUrl() }} target="_blank"
+                            rel="noopener noreferrer">Leer en notion</a>
+                    </div>
+                </article>
+            @endforeach
+        </section>
+    </div>
 </body>
 
 </html>

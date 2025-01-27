@@ -14,7 +14,18 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                'skl-nunito': ['"Nunito Sans"', 'serif']
             },
+            colors: {
+                'skl-black': '#0A090B',
+                'skl-grey': '#101828',
+                'skl-white': {
+                    DEFAULT: '#F4F3FF',
+                    'pink': '#EBE9FE',
+                    'true': '#FFFFFF',
+                },
+                'skl-purple': '#0A090B',
+            }
         },
     },
 
