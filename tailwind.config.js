@@ -14,7 +14,8 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-                'skl-nunito': ['"Nunito Sans"', 'serif']
+                'skl-nunito': ['"Nunito Sans"', 'serif'],
+                'skl-titles': ['"Chakra Petch"', 'serif']
             },
             colors: {
                 'skl-black': '#0A090B',

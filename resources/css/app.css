@@ -7,14 +7,18 @@
         @apply text-white font-skl-nunito;
     }
 
-    p,span,a,li,h2,h3,h4,h5,h6 {
+    p, li {
         @apply font-skl-nunito;
     }
 
+    p {
+        @apply text-base p-2;
+    }
+
     h2 {
-        @apply font-bold text-5xl py-4 font-skl-nunito;
+        @apply font-bold text-5xl py-4 font-skl-titles;
     }
     h3 {
-        @apply font-bold text-2xl py-2;
+        @apply font-medium text-2xl py-2 font-skl-titles leading-normal;
     }
 }
