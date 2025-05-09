@@ -4,7 +4,10 @@
 
 @layer base {
     body {
-        @apply text-white font-skl-nunito;
+        @apply text-skl-white font-skl-nunito;
+    }
+    section {
+        @apply px-4;
     }
 
     p, li {
@@ -19,6 +22,6 @@
         @apply font-bold text-5xl py-4 font-skl-titles;
     }
     h3 {
-        @apply font-medium text-2xl py-2 font-skl-titles leading-normal;
+        @apply font-semibold text-2xl py-2 font-skl-titles leading-normal;
     }
 }

@@ -21,11 +21,14 @@ export default {
                 'skl-black': '#0A090B',
                 'skl-grey': '#101828',
                 'skl-white': {
-                    DEFAULT: '#F4F3FF',
+                    DEFAULT: '#D9D9D9',
                     'pink': '#EBE9FE',
                     'true': '#FFFFFF',
                 },
-                'skl-purple': '#0A090B',
+                'skl-pink': {
+                    DEFAULT: '#DC105F',
+                },
+                'skl-purple': '#301770',
             }
         },
     },
