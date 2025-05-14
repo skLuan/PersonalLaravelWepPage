@@ -14,8 +14,8 @@
             </article>
             <figure class="w-full relative">
                 <picture>
+                    <source media="(min-width: 920px)" srcset="/imgs/hero1.jpg">
                     <img class="" width="100%" src="/blog_images/banner_mobile.png" alt="">
-                    <source media="(min-width: 1500px)" srcset="/imgs/hero1.jpg">
                 </picture>
                 <h2 class="text-skl-white-true bg-skl-black px-10 py-6 my-12 absolute top-0">
                     Blog

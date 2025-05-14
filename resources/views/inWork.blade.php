@@ -26,11 +26,11 @@
     <x-three-canvas />
     <nav class="relative z-50">
         <ul class="list-none flex justify-center flex-row">
-            <li class="px-6 font-bold hover:text-rose-700 transition-all hover:underline"><a href="{{route('portfolio')}}">Portfolio</a>
+            <li class="px-6 font-bold hover:text-rose-700 transition-all hover:underline"><a href="{{route('inWorkPortfolio')}}">Portfolio</a>
             </li>
             <li class="px-6 font-bold hover:text-rose-700 transition-all hover:underline"><a target="_blank" href="https://data.skyrocket.com.co/index.php/s/rTTKPFFmtLcEEJg">CV - Curriculum Vitae - español</a>
             </li>
-            <li class="px-6 font-bold hover:text-rose-700 transition-all hover:underline"><a target="_blank" href="{{route('blog')}}">Blog</a>
+            <li class="px-6 font-bold hover:text-rose-700 transition-all hover:underline"><a target="_blank" href="/blog">Blog</a>
             </li>
         </ul>
     </nav>

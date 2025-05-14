@@ -27,6 +27,13 @@ Route::get('/', function () {
 Route::get('/inWork', function () {
     return view('inWork');
 });
+Route::get('inwork/portfolio', function () {
+    return view('portfolio');
+})->name('inWorkPortfolio');
+
+// Route::get('/blog', function () {
+//     return view('blog');
+// })->name('blog');
 Route::get('/portfolio', function () {
     return redirect('https://erazoluan.notion.site/Professional-Life-113cff97a3d780a59e0fdb59a1263a1e');
 })->name('portfolio');
