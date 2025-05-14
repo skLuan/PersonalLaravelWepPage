@@ -51,10 +51,85 @@
     </section>
     <section id="whatIDo">
         <x-title-web>What I Do</x-title-web>
-
+        <div class="relative">
+            <h4 class="text-right sticky top-0 p-3 shadow-md text-skl-yellow">Design</h4>
+            <article class="">
+                <x-card.simple iconName="ri:mind-map">
+                    <x-slot:title>Navigation Optimization</x-slot>
+                    Design of clear, logical structures to improve the user experience in web navigation. I analyze
+                    information
+                    architecture to ensure that users can easily find what they are looking for.
+                </x-card.simple>
+                {{-- ----------------- --}}
+                <x-card.simple iconName="devicon:figma">
+                    <x-slot:title>Custom Interface Design</x-slot>
+                    Creation of visually appealing and functional interfaces tailored to the client’s needs, focused on user
+                    experience. I strive to balance aesthetics and functionality to guarantee a smooth and memorable
+                    experience.
+                </x-card.simple>
+                {{-- ----------------- --}}
+                <x-card.simple iconName="material-symbols-light:design-services-outline-rounded">
+                    <x-slot:title>Digital Product Creation</x-slot>
+                    Design and development of innovative digital solutions, from applications to interactive experiences,
+                    always
+                    centered on improving the end-user experience.
+                </x-card.simple>
+                {{-- ----------------- --}}
+            </article>
+        </div>
+        <div class="relative">
+            <h4 class="text-right sticky top-0 p-3 shadow-md text-skl-yellow">Development</h4>
+            <article class="">
+                <x-card.simple iconName="system-uicons:code">
+                    <x-slot:title>Custom Web Experience</x-slot>
+                    Development of tailor-made websites designed to provide a smooth and intuitive user experience, adapted
+                    to the specific needs of your project.
+                </x-card.simple>
+                {{-- ----------------- --}}
+                <x-card.simple iconName="eos-icons:performance">
+                    <x-slot:title>Web Performance Optimization</x-slot>
+                    Implementation of improvements to increase website loading speed and efficiency, optimizing both
+                    performance and SEO rankings.
+                </x-card.simple>
+                {{-- ----------------- --}}
+                <x-card.simple iconName="mdi:cloud-refresh-outline">
+                    <x-slot:title>Technological Optimization</x-slot>
+                    Evaluation and improvement of the technological tools used in your project, ensuring their effective
+                    integration into your business infrastructure to maximize efficiency and scalability.
+                </x-card.simple>
+                {{-- ----------------- --}}
+            </article>
+        </div>
     </section>
     <section id="Projects">
-
+        <x-title-web class="justify-end">Projects</x-title-web>
+        <ul>
+            <li><button>Web & Product</button></li>
+            <li><button>Graphic Design</button></li>
+        </ul>
+        <ul>
+            <li class="!border-skl-purple border p-2 rounded-lg">
+                <figure>
+                    <picture>
+                        <source media="(min-width: )" srcset=""><img src="" alt="">
+                    </picture>
+                </figure>
+                <p>Dr Carlos Gamboa page <iconify-icon icon="mingcute:right-fill" width="24"
+                        height="24"></iconify-icon></p>
+                <div class="w-full flex justify-between"><span class="font-skl-titles">Url</span><a
+                        href="https://drcarlosgamboa.com/">https://drcarlosgamboa.com/</a></div>
+                <div class="flex justify-between py-2"><span class="font-skl-titles">Skills</span>
+                    <div class="flex flex-row justify-evenly w-full">
+                        <span class="pillskl !border-skl-purple border rounded-full px-3 py-1">Front dev</span>
+                        <span class="pillskl !border-skl-purple border rounded-full px-3 py-1">Ux/Ui</span>
+                    </div>
+                </div>
+                <p class="border-t !border-t-skl-purple">
+                    I am a self-taught digital creator with over 4 years of experience in web design and development,
+                    passionate about continuous learning and innovation.
+                </p>
+            </li>
+        </ul>
     </section>
     <section id="Skills">
 

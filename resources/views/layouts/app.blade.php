@@ -21,7 +21,7 @@
         href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap"
         rel="stylesheet">
     <!-- Scripts -->
-    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+    @vite(['resources/sass/app.scss'])
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <!-- Google tag (gtag.js) -->
@@ -41,7 +41,7 @@
     <div id="app" class="relative">
         <x-navbar.main />
 
-        <main class="py-4">
+        <main class="py-4 !pb-20">
             @yield('content')
         </main>
         <x-footer />

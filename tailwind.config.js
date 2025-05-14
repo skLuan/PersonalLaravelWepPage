@@ -28,6 +28,9 @@ export default {
                 'skl-pink': {
                     DEFAULT: '#DC105F',
                 },
+                'skl-yellow': {
+                    DEFAULT: '#FFC030',
+                },
                 'skl-purple': '#301770',
             }
         },
