@@ -14,8 +14,11 @@
         @apply font-skl-nunito;
     }
 
-    p {
+    p, a {
         @apply text-base p-2;
+    }
+    a{
+        @apply underline text-skl-pink
     }
 
     h2,h3,h4,h5,h6 {
