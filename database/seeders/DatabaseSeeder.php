@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,5 +21,19 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        $skills = [
+            'Ux/Ui',
+            'Wordpress',
+            'Frontend',
+            'Laravel',
+        ];
+        for ($i=0; $i < count($skills); $i++) { 
+            
+            DB::table('skills')->insert([
+                'name' => $skills[$i],
+            ]);
+        }
+        
+
     }
 }
