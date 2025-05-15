@@ -43,21 +43,13 @@ class World {
         const pointLightOne = createPointLight();
         // -------------------------------- Loop Init
         loop = new Loop(camera, scene, renderer);
-        // -------------------------------- Controls
-        const controls = createControls(camera, renderer.domElement);
         // -------------------------------- Meshes
         const cone = new createCone("purple", 0.2, 1.3);
-        // cubeGroup = createGroup();
-        // cubeGroup.add(cube);
-        camera.position.y = 20;
         cone.matrixAutoUpdate = false;
-        
-        camera.rotateY(MathUtils.degToRad(90));
-        loop.updatables.push(controls, cone);
-        
+
         scene.add(camera, cone, hemisphereLight, helper);
         // scene.add(sphere);
-        
+
         //------------------------- Yuka ------------
         const vehicle = new YUKA.Vehicle();
         vehicle.setRenderComponent(cone, sync);
@@ -91,23 +83,44 @@ class World {
         const position = [];
         for (let i = 0; i < path._waypoints.length; i++) {
             const waypoint = path._waypoints[i];
-            position.push(waypoint.x, waypoint.y,waypoint.z)
+            position.push(waypoint.x, waypoint.y, waypoint.z);
         }
         const lineGeometry = new THREE.BufferGeometry();
-        lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(position,3))
-        const lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff})
-        const lines = new THREE.LineLoop(lineGeometry, lineMaterial)
+        lineGeometry.setAttribute(
+            "position",
+            new THREE.Float32BufferAttribute(position, 3)
+        );
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
         scene.add(lines);
 
         const time = new YUKA.Time();
 
-        entityManager.tick = (delta) => { // add tick metod to push to loop
-          const deltaYuka = time.update().getDelta();
-          entityManager.update(deltaYuka);
+        entityManager.tick = (delta) => {
+            // add tick metod to push to loop
+            const deltaYuka = time.update().getDelta();
+            entityManager.update(deltaYuka);
+        };
+
+        // -------------------------------- Obtener el elemento <main>
+        const mainEl = document.querySelector("main");
+        if (mainEl) {
+            let mainTopPosition = window.pageYOffset; // Posición absoluta en el documento
+            // Configura la cámara en una posición fija
+            camera.position.set(0, 30, mainTopPosition*0.005); // Escala la altura (ajusta el factor 0.01 según necesidad)
+            camera.lookAt(0, 0, 0);
+            document.addEventListener("scroll", () => {
+                mainTopPosition = window.pageYOffset; // Posición absoluta en el documento
+                camera.position.z = mainTopPosition * 0.005; // Escala la altura (ajusta el factor 0.01 según necesidad)
+            });
+        } else {
+            console.warn(
+                "Elemento <main> no encontrado, usando valor por defecto"
+            );
+            mainTopPosition = 500; // Valor por defecto
         }
 
-        loop.updatables.push(entityManager);
-
+        loop.updatables.push(camera, cone, entityManager);
 
         const resizer = new Resizer(container, camera, renderer);
     }

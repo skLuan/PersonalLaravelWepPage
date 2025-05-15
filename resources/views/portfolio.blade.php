@@ -4,6 +4,7 @@
 @extends('layouts.app', ['title' => $title])
 
 @section('content')
+    <x-three-canvas />
     <section id="hero">
 
     </section>
@@ -23,7 +24,17 @@
             </div>
         </article>
         <article>
-            <x-title-web class="justify-end">About Me</x-title-web>
+            <ul>
+                <li class=" items-end flex">
+                    <a class="text-right py-0 ml-auto" href="#whatIDo">What I do</a>
+                </li>
+                <li class=" items-end flex">
+                    <a class="text-right py-0 ml-auto" href="#Projects">Projects</a>
+                </li>
+                <li>
+                    <x-title-web class="justify-end">About Me</x-title-web>
+                </li>
+            </ul>
             <p>
                 I am a self-taught digital creator with over 4 years of experience in web design and development, passionate
                 about continuous learning and innovation.

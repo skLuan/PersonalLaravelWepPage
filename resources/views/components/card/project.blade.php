@@ -1,5 +1,5 @@
 <div class="!border-skl-purple border p-2 rounded-lg">
-    <figure>
+    <figure class="bg-slate-400 h-44 w-full max-h-44 overflow-hidden rounded-md">
         <picture>
             <source media="(min-width: )" srcset=""><img src="" alt="">
         </picture>
