@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\CurriculumVitae;
+use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
 use App\Providers\NotionService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,16 +30,16 @@ Route::get('/', function () {
 Route::get('/inWork', function () {
     return view('inWork');
 });
-Route::get('inwork/portfolio', function () {
-    return view('portfolio');
-})->name('inWorkPortfolio');
+// Route::get('inwork/portfolio', function () {
+//     return view('portfolio');
+// })->name('inWorkPortfolio');
 
 // Route::get('/blog', function () {
 //     return view('blog');
 // })->name('blog');
-Route::get('/portfolio', function () {
-    return redirect('https://erazoluan.notion.site/Professional-Life-113cff97a3d780a59e0fdb59a1263a1e');
-})->name('portfolio');
+// Route::get('/portfolio', function () {
+//     return redirect('https://erazoluan.notion.site/Professional-Life-113cff97a3d780a59e0fdb59a1263a1e');
+// })->name('portfolio');
 
 
 
@@ -54,5 +57,9 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 Auth::routes();
+
+
+Route::resource('projects', ProjectController::class);
+Route::resource('portfolio', PortfolioController::class);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

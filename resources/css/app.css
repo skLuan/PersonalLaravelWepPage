@@ -7,7 +7,7 @@
         @apply text-skl-white font-skl-nunito;
     }
     section {
-        @apply px-4 z-10;
+        @apply px-4 z-10 relative;
     }
 
     p, li {

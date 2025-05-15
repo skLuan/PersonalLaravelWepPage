@@ -119,9 +119,13 @@
             <li><button>Graphic Design</button></li>
         </ul>
         <ul>
-            <li>
-                <x-card.project />
-            </li>
+            @forelse ($projects as $project)
+                <li>
+                    <x-card.project :$project />
+                </li>
+            @empty
+                <p class="text-gray-400">No hay proyectos disponibles.</p>
+            @endforelse
         </ul>
     </section>
     <section id="Skills">
