@@ -35,4 +35,10 @@ class Project extends Model
             ->generateSlugsFrom('title') // Genera el slug a partir del título
             ->saveSlugsTo('slug'); // Guarda el slug en el campo 'slug'
     }
+
+    // Especifica que las rutas deben usar el campo 'slug' en lugar de 'id'
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
 }

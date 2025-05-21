@@ -20,9 +20,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return redirect('inWork');
-});
 // Route::get('/blog', function() {
 //     return redirect('https://erazoluan.notion.site/Blog-060c7617bd494cbbbd7badfff7afbe35');
 // })->name('blog');

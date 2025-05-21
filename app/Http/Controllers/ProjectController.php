@@ -97,7 +97,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'short_description' => 'required|string',
-            'url_img' => 'required|url',
+            'image_path' => 'required|url',
             'site_url' => 'nullable|url',
             'body' => 'required|string',
             'skills' => 'required|array',
@@ -108,7 +108,7 @@ class ProjectController extends Controller
             'title' => $validated['title'],
             'slug' => \Illuminate\Support\Str::slug($validated['title']),
             'short_description' => $validated['short_description'],
-            'url_img' => $validated['url_img'],
+            'image_path' => $validated['image_path'],
             'site_url' => $validated['site_url'],
             'body' => $validated['body'],
         ]);
