@@ -8,10 +8,10 @@
     <section id="hero">
 
     </section>
-    <section id="aboutMe" class="pt-6">
-        <article id="le-info-container" class="lg:w-10/12 lg:flex justify-end lg:mx-auto relative z-10">
+    <section id="aboutMe" class="pt-6 lg:w-8/12 mx-auto" >
+        <article id="le-info-container" class="relative z-10">
             <div class="p-2 my-auto flex flex-col justify-start">
-                <figure class="rounded-full overflow-hidden w-4/6 border-skl-purple border-2">
+                <figure class="rounded-full overflow-hidden w-2/3 lg:w-2/5 hover:w-3/6 transition-all border-skl-purple border-2">
                     <picture><img class="" src="/imgs/Luan_square.png" alt=""></picture>
                 </figure>
                 <span class="text-4xl font-skl-titles">David
@@ -23,7 +23,7 @@
                 </div>
             </div>
         </article>
-        <article>
+        <article class="">
             <ul>
                 <li class=" items-end flex">
                     <a class="text-right py-0 ml-auto" href="#whatIDo">What I do</a>
@@ -60,11 +60,11 @@
             </p>
         </article>
     </section>
-    <section id="whatIDo">
+    <section id="whatIDo" class="pt-6 lg:w-10/12 mx-auto">
         <x-title-web>What I Do</x-title-web>
         <div class="relative">
             <h4 class="text-right sticky top-0 p-3 shadow-md text-skl-yellow">Design</h4>
-            <article class="">
+            <article class=" md:grid grid-cols-3 gap-4">
                 <x-card.simple iconName="ri:mind-map">
                     <x-slot:title>Navigation Optimization</x-slot>
                     Design of clear, logical structures to improve the user experience in web navigation. I analyze
@@ -90,9 +90,9 @@
         </div>
         <div class="relative">
             <h4 class="text-right sticky top-0 p-3 shadow-md text-skl-yellow">Development</h4>
-            <article class="">
+            <article class=" md:grid grid-cols-3 gap-4">
                 <x-card.simple iconName="system-uicons:code">
-                    <x-slot:title>Custom Web Experience</x-slot>
+                    <x-slot:title>Custom <br> Web Experience</x-slot>
                     Development of tailor-made websites designed to provide a smooth and intuitive user experience, adapted
                     to the specific needs of your project.
                 </x-card.simple>
@@ -112,13 +112,13 @@
             </article>
         </div>
     </section>
-    <section id="Projects">
-        <x-title-web class="justify-end">Projects</x-title-web>
+    <section id="Projects" class="pt-6 mx-auto lg:w-11/12">
+        <x-title-web class="justify-end w-8/12 mx-auto">Projects</x-title-web>
         <ul>
             <li><button>Web & Product</button></li>
             <li><button>Graphic Design</button></li>
         </ul>
-        <ul>
+        <ul class="md:grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             @forelse ($projects as $project)
                 <li>
                     <x-card.project :$project />
@@ -128,10 +128,10 @@
             @endforelse
         </ul>
     </section>
-    <section id="Skills">
+    <section id="Skills" class="pt-6 lg:w-8/12 mx-auto">
 
     </section>
-    <section id="letsWork">
+    <section id="letsWork" class="pt-6 lg:w-8/12 mx-auto">
 
     </section>
 @endsection
