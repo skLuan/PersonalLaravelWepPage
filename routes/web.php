@@ -57,6 +57,6 @@ Auth::routes();
 
 
 Route::resource('projects', ProjectController::class);
-Route::resource('portfolio', PortfolioController::class);
+Route::resource('portfolio', PortfolioController::class)->name('index', 'portfolio');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
