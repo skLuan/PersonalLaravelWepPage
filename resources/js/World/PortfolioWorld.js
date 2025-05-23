@@ -19,6 +19,7 @@ import * as YUKA from "yuka";
 import * as THREE from "three";
 import { getDomElementCoordsAsYuka } from "./systems/coordenatesSettler";
 import { createSquid } from "./components/squid.js";
+import { entityManager } from "./systems/entityManager.js";
 //import { loadBirds } from "./components/birds/birds.js";
 
 let camera;
@@ -48,7 +49,7 @@ class PortfolioWorld {
         loop = new Loop(camera, scene, renderer);
         // -------------------------------- Meshes
         const squid = createSquid(scene,"purple", 0.2, 1.3);
-        console.log(squid);
+        
         scene.add(camera, hemisphereLight, helper);
 
         //------------------------- Yuka ------------
@@ -93,8 +94,7 @@ class PortfolioWorld {
         const onPathBehavior = new YUKA.OnPathBehavior(path);
         squid.steering.add(onPathBehavior);
 
-        const entityManager = new YUKA.EntityManager();
-        entityManager.add(squid);
+        const squidManager = entityManager([squid]);
 
         const position = [];
         for (let i = 0; i < path._waypoints.length; i++) {
@@ -109,15 +109,6 @@ class PortfolioWorld {
         const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
         const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
         scene.add(lines);
-
-        const time = new YUKA.Time();
-
-        entityManager.tick = (delta) => {
-            // add tick metod to push to loop
-            const deltaYuka = time.update().getDelta();
-            entityManager.update(deltaYuka);
-        };
-
 
         // -------------------------------- Obtener el elemento <main>
         const mainEl = document.querySelector("main");
@@ -147,7 +138,7 @@ class PortfolioWorld {
             console.log("World position:", vector);
         });
 
-        loop.updatables.push(camera, squid, entityManager);
+        loop.updatables.push(camera, squidManager);
 
         const resizer = new Resizer(container, camera, renderer);
     }
