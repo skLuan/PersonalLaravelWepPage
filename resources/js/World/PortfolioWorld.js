@@ -17,6 +17,8 @@ import { createGroup, createMeshGroup } from "./components/meshGroup.js";
 import { MathUtils } from "three";
 import * as YUKA from "yuka";
 import * as THREE from "three";
+import { getDomElementCoordsAsYuka } from "./systems/coordenatesSettler";
+import { createSquid } from "./components/squid.js";
 //import { loadBirds } from "./components/birds/birds.js";
 
 let camera;
@@ -25,6 +27,7 @@ let scene;
 let light;
 let loop;
 let cubeGroup;
+let YukaPath;
 class PortfolioWorld {
     constructor(container) {
         // -------------------------------- Helpers
@@ -44,41 +47,54 @@ class PortfolioWorld {
         // -------------------------------- Loop Init
         loop = new Loop(camera, scene, renderer);
         // -------------------------------- Meshes
-        const cone = new createCone("purple", 0.2, 1.3);
-        cone.matrixAutoUpdate = false;
-
-        scene.add(camera, cone, hemisphereLight, helper);
-        // scene.add(sphere);
+        const squid = createSquid(scene,"purple", 0.2, 1.3);
+        console.log(squid);
+        scene.add(camera, hemisphereLight, helper);
 
         //------------------------- Yuka ------------
-        const vehicle = new YUKA.Vehicle();
-        vehicle.setRenderComponent(cone, sync);
-        //vehicle.rotateTo (MathUtils.degToRad(90));
-
-        function sync(entity, renderComponent) {
-            renderComponent.matrix.copy(entity.worldMatrix);
-        }
 
         const path = new YUKA.Path();
-        path.add(new YUKA.Vector3(-4, 0, 4));
-        path.add(new YUKA.Vector3(-6, 0, 0));
-        path.add(new YUKA.Vector3(-4, 0, -4));
-        path.add(new YUKA.Vector3(0, 0, 0));
-        path.add(new YUKA.Vector3(4, 0, -4));
-        path.add(new YUKA.Vector3(6, 0, 0));
-        path.add(new YUKA.Vector3(4, 0, 4));
-        path.add(new YUKA.Vector3(0, 0, 6));
+        YukaPath = path;
+        path.add(new YUKA.Vector3(3, 0, -0.5));
+        path.add(new YUKA.Vector3(7, 0, 13));
+        path.add(new YUKA.Vector3(2, 0, 40));
+        // path.add(new YUKA.Vector3(0, 0, 0));
+        // path.add(new YUKA.Vector3(4, 0, -4));
+        // path.add(new YUKA.Vector3(6, 0, 0));
+        // path.add(new YUKA.Vector3(4, 0, 4));
+        // path.add(new YUKA.Vector3(0, 0, 6));
+
+        // Supón que tienes una función que convierte coords de pantalla a mundo
+        function toWorldCoords(x, y) {
+            // Implementa según tu lógica de cámara/proyección
+            // Por ejemplo, usando THREE.js: unproject, etc.
+            let newX = x * 0.01;
+            let newY = y * 0.01;
+            console.log(x, y);
+            return { x: newX, y: 0, z: newY }; // Ejemplo simple
+        }
+
+        const toPath = document.querySelectorAll(".to-path");
+        // const path = new YUKA.Path();
+        // toPath.forEach((id) => {
+        //     const vec = getDomElementCoordsAsYuka(id, toWorldCoords);
+        //     if (vec) path.add(vec);
+        // });
+
+        // document.addEventListener("DOMContentLoaded", () => {
+        // });
+
 
         path.loop = true;
 
-        vehicle.position.copy(path.current());
+        squid.position.copy(path.current());
         const followPathBehivor = new YUKA.FollowPathBehavior(path, 0.5);
-        vehicle.steering.add(followPathBehivor);
+        squid.steering.add(followPathBehivor);
         const onPathBehavior = new YUKA.OnPathBehavior(path);
-        vehicle.steering.add(onPathBehavior);
+        squid.steering.add(onPathBehavior);
 
         const entityManager = new YUKA.EntityManager();
-        entityManager.add(vehicle);
+        entityManager.add(squid);
 
         const position = [];
         for (let i = 0; i < path._waypoints.length; i++) {
@@ -102,16 +118,19 @@ class PortfolioWorld {
             entityManager.update(deltaYuka);
         };
 
+
         // -------------------------------- Obtener el elemento <main>
         const mainEl = document.querySelector("main");
         if (mainEl) {
-            let mainTopPosition = window.pageYOffset; // Posición absoluta en el documento
             // Configura la cámara en una posición fija
-            camera.position.set(0, 30, mainTopPosition*0.005); // Escala la altura (ajusta el factor 0.01 según necesidad)
-            camera.lookAt(0, 0, 0);
+            camera.position.set(5, 30, 10); // Escala la altura (ajusta el factor 0.01 según necesidad)
+            camera.lookAt(5, 0, 10);
+            let lastScrollY = window.pageYOffset;
             document.addEventListener("scroll", () => {
-                mainTopPosition = window.pageYOffset; // Posición absoluta en el documento
-                camera.position.z = mainTopPosition * 0.005; // Escala la altura (ajusta el factor 0.01 según necesidad)
+                const currentScrollY = window.pageYOffset;
+                const delta = currentScrollY - lastScrollY;
+                camera.position.z += delta * 0.03; // Suma la distancia de scroll (negativo hacia abajo)
+                lastScrollY = currentScrollY;
             });
         } else {
             console.warn(
@@ -119,8 +138,16 @@ class PortfolioWorld {
             );
             mainTopPosition = 500; // Valor por defecto
         }
+        document.addEventListener("click", (event) => {
+            const rect = renderer.domElement.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            const vector = new THREE.Vector3(x, 0, y);
+            vector.unproject(camera);
+            console.log("World position:", vector);
+        });
 
-        loop.updatables.push(camera, cone, entityManager);
+        loop.updatables.push(camera, squid, entityManager);
 
         const resizer = new Resizer(container, camera, renderer);
     }
