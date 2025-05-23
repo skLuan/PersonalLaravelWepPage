@@ -87,7 +87,7 @@ class PortfolioWorld {
             console.log("World position:", vector);
         });
 
-        loop.updatables.push(camera, squidManager);
+        loop.updatables.push(camera, squidManager,path);
 
         const resizer = new Resizer(container, camera, renderer);
     }

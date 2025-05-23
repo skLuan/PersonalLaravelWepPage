@@ -21,12 +21,7 @@ class PathCreator {
 
         this.path.loop = true;
 
-        vehicle.position.copy(this.path.current());
-        const followPathBehivor = new YUKA.FollowPathBehavior(this.path, 0.5);
-        vehicle.steering.add(followPathBehivor);
-        const onPathBehavior = new YUKA.OnPathBehavior(this.path);
-        vehicle.steering.add(onPathBehavior);
-
+        this.vehicleFollowPath(vehicle);
         const position = [];
         for (let i = 0; i < this.path._waypoints.length; i++) {
             const waypoint = this.path._waypoints[i];
@@ -39,6 +34,22 @@ class PathCreator {
         );
         const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
         this.lines = new THREE.LineLoop(lineGeometry, lineMaterial);
+
+        if (this.path._index > 1) {
+            console.log("yess");
+            // vehicle.steering.add(followPathBehivor);
+            vehicle.active = false;
+        }
+        this.tick = (delta) => {
+            // console.log(this.path._index);
+        };
+    }
+    vehicleFollowPath(vehicle) {
+        vehicle.position.copy(this.path.current());
+        const followPathBehivor = new YUKA.FollowPathBehavior(this.path, 0.5);
+        vehicle.steering.add(followPathBehivor);
+        const onPathBehavior = new YUKA.OnPathBehavior(this.path);
+        vehicle.steering.add(onPathBehavior);
     }
 
     DOMtoPath(querySelector) {

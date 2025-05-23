@@ -11,7 +11,7 @@
     <section id="aboutMe" class="pt-6 lg:w-8/12 mx-auto" >
         <article id="le-info-container" class="relative z-10">
             <div class="p-2 my-auto flex flex-col justify-start">
-                <figure class="rounded-full overflow-hidden w-2/3 lg:w-2/5 hover:w-3/6 transition-all border-skl-purple border-2">
+                <figure class="to-path rounded-full overflow-hidden w-2/3 lg:w-2/5 hover:w-3/6 transition-all border-skl-purple border-2">
                     <picture><img class="" src="/imgs/Luan_square.png" alt=""></picture>
                 </figure>
                 <span class="text-4xl font-skl-titles">David
@@ -32,7 +32,7 @@
                     <a class="text-right py-0 ml-auto" href="#Projects">Projects</a>
                 </li>
                 <li>
-                    <x-title-web class="justify-end">About Me</x-title-web>
+                    <x-title-web id="title-about-me" class="justify-end">About Me</x-title-web>
                 </li>
             </ul>
             <p>
@@ -61,7 +61,7 @@
         </article>
     </section>
     <section id="whatIDo" class="pt-6 lg:w-10/12 mx-auto">
-        <x-title-web>What I Do</x-title-web>
+        <x-title-web class="">What I Do</x-title-web>
         <div class="relative">
             <h4 class="text-right sticky top-0 p-3 shadow-md text-skl-yellow">Design</h4>
             <article class=" md:grid grid-cols-3 gap-4">
