@@ -20,6 +20,7 @@ import * as THREE from "three";
 import { getDomElementCoordsAsYuka } from "./systems/coordenatesSettler";
 import { createSquid } from "./components/squid.js";
 import { entityManager } from "./systems/entityManager.js";
+import { PathCreator } from "./components/PathCreator.js";
 //import { loadBirds } from "./components/birds/birds.js";
 
 let camera;
@@ -28,7 +29,6 @@ let scene;
 let light;
 let loop;
 let cubeGroup;
-let YukaPath;
 class PortfolioWorld {
     constructor(container) {
         // -------------------------------- Helpers
@@ -53,62 +53,11 @@ class PortfolioWorld {
         scene.add(camera, hemisphereLight, helper);
 
         //------------------------- Yuka ------------
-
-        const path = new YUKA.Path();
-        YukaPath = path;
-        path.add(new YUKA.Vector3(3, 0, -0.5));
-        path.add(new YUKA.Vector3(7, 0, 13));
-        path.add(new YUKA.Vector3(2, 0, 40));
-        // path.add(new YUKA.Vector3(0, 0, 0));
-        // path.add(new YUKA.Vector3(4, 0, -4));
-        // path.add(new YUKA.Vector3(6, 0, 0));
-        // path.add(new YUKA.Vector3(4, 0, 4));
-        // path.add(new YUKA.Vector3(0, 0, 6));
-
-        // Supón que tienes una función que convierte coords de pantalla a mundo
-        function toWorldCoords(x, y) {
-            // Implementa según tu lógica de cámara/proyección
-            // Por ejemplo, usando THREE.js: unproject, etc.
-            let newX = x * 0.01;
-            let newY = y * 0.01;
-            console.log(x, y);
-            return { x: newX, y: 0, z: newY }; // Ejemplo simple
-        }
-
-        const toPath = document.querySelectorAll(".to-path");
-        // const path = new YUKA.Path();
-        // toPath.forEach((id) => {
-        //     const vec = getDomElementCoordsAsYuka(id, toWorldCoords);
-        //     if (vec) path.add(vec);
-        // });
-
-        // document.addEventListener("DOMContentLoaded", () => {
-        // });
-
-
-        path.loop = true;
-
-        squid.position.copy(path.current());
-        const followPathBehivor = new YUKA.FollowPathBehavior(path, 0.5);
-        squid.steering.add(followPathBehivor);
-        const onPathBehavior = new YUKA.OnPathBehavior(path);
-        squid.steering.add(onPathBehavior);
+        const path = new PathCreator(squid);
+        scene.add(path.lines);
 
         const squidManager = entityManager([squid]);
 
-        const position = [];
-        for (let i = 0; i < path._waypoints.length; i++) {
-            const waypoint = path._waypoints[i];
-            position.push(waypoint.x, waypoint.y, waypoint.z);
-        }
-        const lineGeometry = new THREE.BufferGeometry();
-        lineGeometry.setAttribute(
-            "position",
-            new THREE.Float32BufferAttribute(position, 3)
-        );
-        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
-        const lines = new THREE.LineLoop(lineGeometry, lineMaterial);
-        scene.add(lines);
 
         // -------------------------------- Obtener el elemento <main>
         const mainEl = document.querySelector("main");
