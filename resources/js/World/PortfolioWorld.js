@@ -49,11 +49,12 @@ class PortfolioWorld {
         loop = new Loop(camera, scene, renderer);
         // -------------------------------- Meshes
         const squid = createSquid(scene,"purple", 0.2, 1.3);
+        squid.position.set(5, 0, 10);
         
         scene.add(camera, hemisphereLight, helper);
 
         //------------------------- Yuka ------------
-        const path = new PathCreator(squid);
+        const path = new PathCreator();
         scene.add(path.lines);
 
         const squidManager = entityManager([squid]);
