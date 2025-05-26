@@ -48,24 +48,33 @@ class PortfolioWorld {
         // -------------------------------- Loop Init
         loop = new Loop(camera, scene, renderer);
         // -------------------------------- Meshes
-        const squid = createSquid(scene,"purple", 0.2, 1.3);
-        squid.position.set(5, 0, 10);
-        
-        scene.add(camera, hemisphereLight, helper);
+        const squidManager = entityManager([]);
+
+        const path = new PathCreator();
+        for (let i = 0; i < 50; i++) {
+            const squid = createSquid(scene, "purple", 0.1, 0.5);
+            squid.position.set(
+                MathUtils.randFloatSpread(10),
+                0,
+                MathUtils.randFloatSpread(10)
+            );
+            squid.rotation.fromEuler(0, 2 * Math.PI * Math.random(), 0);
+            squid.updatePath(path.getPaths());
+            squidManager.add(squid);
+        }
+
+        scene.add(camera, hemisphereLight, helper,path.lines);
 
         //------------------------- Yuka ------------
-        const path = new PathCreator();
-        scene.add(path.lines);
-
-        const squidManager = entityManager([squid]);
-
+        //const path = new PathCreator();
+        //scene.add(path.lines);
 
         // -------------------------------- Obtener el elemento <main>
         const mainEl = document.querySelector("main");
         if (mainEl) {
             // Configura la cámara en una posición fija
-            camera.position.set(5, 30, 10); // Escala la altura (ajusta el factor 0.01 según necesidad)
-            camera.lookAt(5, 0, 10);
+            camera.position.set(0, 30, 0); // Escala la altura (ajusta el factor 0.01 según necesidad)
+            camera.lookAt(0, 0, 0);
             let lastScrollY = window.pageYOffset;
             document.addEventListener("scroll", () => {
                 const currentScrollY = window.pageYOffset;
@@ -87,8 +96,7 @@ class PortfolioWorld {
             vector.unproject(camera);
             console.log("World position:", vector);
         });
-
-        loop.updatables.push(camera, squidManager,path);
+        loop.updatables.push(camera, squidManager, path);
 
         const resizer = new Resizer(container, camera, renderer);
     }
@@ -122,4 +130,8 @@ class PortfolioWorld {
     }
 }
 
-export { PortfolioWorld };
+function getScene() {
+    return scene;
+}
+
+export { PortfolioWorld, getScene };

@@ -9,10 +9,11 @@ class PathCreator {
         this.isDrawing = false;
         this.lines = null;
 
-        this.path.add(new YUKA.Vector3(3, 0, -0.5));
-        this.path.add(new YUKA.Vector3(7, 0, -0.5));
-        this.path.add(new YUKA.Vector3(7, 0, 13));
-        this.path.add(new YUKA.Vector3(2, 0, 40));
+        this.path.add(new YUKA.Vector3(-3, 0, -10));
+        this.path.add(new YUKA.Vector3(3, 0, -10));
+        this.path.add(new YUKA.Vector3(3, 0, 4));
+        this.path.add(new YUKA.Vector3(-3, 0, 3));
+        //this.path.add(new YUKA.Vector3(2, 0, 40));
         // path.add(new YUKA.Vector3(0, 0, 0));
         // path.add(new YUKA.Vector3(4, 0, -4));
         // path.add(new YUKA.Vector3(6, 0, 0));
@@ -40,6 +41,11 @@ class PathCreator {
         this.tick = (delta) => {
             // console.log(this.path._index);
         };
+
+    }
+
+    addToScene(scene) {
+        scene.add(this.lines);
     }
 
     DOMtoPath(querySelector) {

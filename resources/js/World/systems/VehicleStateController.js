@@ -1,4 +1,5 @@
 import * as YUKA from "yuka";
+import { PathCreator } from "../components/PathCreator";
 const target = new YUKA.Vector3(10, 0, 10); // Destino fijo
 let hasSwitched = false;
 const scrollThreshold = 500;
@@ -17,11 +18,10 @@ class VehicleStateController {
         this.vehicle = vehicle;
         //---------------------
         this.path = new YUKA.Path();
-        this.path.add(new YUKA.Vector3(3, 0, -0.5));
-        this.path.add(new YUKA.Vector3(7, 0, -0.5));
+        this.path.add(new YUKA.Vector3(-3, 0, 3));
+        this.path.add(new YUKA.Vector3(3, 0, -7));
         this.path.loop = true;
         //-------------------
-
         // Definir los estados como métodos vinculados
         this.states = {
             wander: this.wander.bind(this), // Vincular el contexto
@@ -38,16 +38,47 @@ class VehicleStateController {
             }
         });
         this.states.wander();
+        this.states.follow();
+    }
+    updateState(stateName) {
+        //this.vehicle.steering.clear();
+        const state = this.states[stateName];
+        if (typeof state === "function") {
+            this.follow();
+        } else {
+            console.warn(`State "${stateName}" does not exist.`);
+        }
     }
     wander() {
-        console.log("Wander behavior activated");
         const wanderBehavior = new YUKA.WanderBehavior();
+        wanderBehavior.weight = 0.6; // Ajustar el peso del comportamiento
         this.vehicle.steering.add(wanderBehavior);
+        this.alignment();
+    }
+    alignment() {
+        const alignmentBehavior = new YUKA.AlignmentBehavior();
+        alignmentBehavior.weight = 1.5;
+
+        const cohesionBehavior = new YUKA.CohesionBehavior();
+        cohesionBehavior.weight = 0.2;
+        const separationBehavior = new YUKA.SeparationBehavior();
+        separationBehavior.weight = 2;
+        this.vehicle.steering.add(alignmentBehavior);
     }
     follow() {
+        // Remove any existing FollowPathBehavior before adding a new one
+        this.vehicle.steering.behaviors = this.vehicle.steering.behaviors.filter(
+            (b) => !(b instanceof YUKA.FollowPathBehavior)
+        );
+        //this.vehicle.steering.clear();
         this.vehicle.position.copy(this.path.current());
-        const followPathBehavior = new YUKA.FollowPathBehavior(this.path, 0.5);
+        const followPathBehavior = new YUKA.FollowPathBehavior(this.path, 0.7);
         this.vehicle.steering.add(followPathBehavior);
+    }
+    removeSteering(BehaviorType) {
+        this.vehicle.steering.behaviors = this.vehicle.steering.behaviors.filter(
+            (b) => !(b instanceof BehaviorType)
+        );
     }
     onPath() {
         const onPathBehavior = new YUKA.OnPathBehavior(this.path);
@@ -58,6 +89,7 @@ class VehicleStateController {
         newPath._waypoints.forEach((point) => {
             this.path.add(point.clone());
         });
+        this.follow(); // Reapply the follow behavior with the new path
     }
 
     tick() {

@@ -11,11 +11,16 @@ function newVehicle(mesh) {
     vehicle.setRenderComponent(mesh, sync);
 
     vehicle.stateController = new VehicleStateController(vehicle); // Controlador de estado del vehículo
+    vehicle.updateNeighborhood = true; // Actualizar vecindario
+    vehicle.neighborhoodRadius = 10; // Radio de vecindario
     function sync(entity, renderComponent) {
         renderComponent.matrix.copy(entity.worldMatrix);
     }
     vehicle.tick = function (delta) {
         vehicle.stateController.tick();
+    }
+    vehicle.updatePath = function (path) {
+        vehicle.stateController.updatePath(path);
     }
     return vehicle;
 }
