@@ -60,3 +60,8 @@ Route::resource('projects', ProjectController::class);
 Route::resource('portfolio', PortfolioController::class)->name('index', 'portfolio');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/', function () {
+    return view('home');
+});
+
+// Route::redirect('/', 'front-page');
