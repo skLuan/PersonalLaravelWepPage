@@ -10,26 +10,32 @@
         @apply px-4 z-10 relative;
     }
 
-    p, li {
+    p,
+    li {
         @apply font-skl-nunito;
     }
 
-    p, a {
+    p,
+    a {
         @apply text-base p-2;
     }
-    a{
-        @apply underline text-skl-pink
+    a {
+        @apply underline text-skl-pink focus:outline-none focus:ring-1 focus:ring-skl-yellow focus:text-skl-yellow;
     }
 
-    h2,h3,h4,h5,h6 {
-        @apply font-skl-titles
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-skl-titles;
     }
 
     h2 {
         @apply font-bold text-5xl py-4;
     }
     h3 {
-        @apply font-semibold italic text-3xl py-2 leading-normal;
+        @apply font-semibold italic text-3xl py-2 leading-tight;
     }
     h4 {
         @apply font-semibold text-2xl;
@@ -37,11 +43,8 @@
     h5 {
         @apply font-semibold text-xl;
     }
-    
 }
 
-@components {
-    .active {
-        @apply !text-skl-yellow;
-    }
+.active {
+    @apply !text-skl-yellow text-base font-normal;
 }

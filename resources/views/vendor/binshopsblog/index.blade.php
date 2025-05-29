@@ -48,8 +48,8 @@
                     @endif
                 @endif
 
-                <div class="container">
-                    <div class="row px-3" id="partial-container">
+                <div class="container cards mx-auto">
+                    <div class="row px-3 grid gap-3 lg:grid-cols-3" id="partial-container">
                         @forelse($posts as $post)
                             @include('binshopsblog::partials.index_loop')
                         @empty

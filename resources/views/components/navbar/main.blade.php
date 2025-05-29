@@ -22,6 +22,18 @@
 
             <!-- Right Side Of Navbar -->
             <ul class="navbar-nav ms-auto">
+                <li class="p-1">
+                    <a class="block text-lg no-underline font-bold {{ request()->routeIs('home') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                        href="/" aria-current="page">Home</a>
+                </li>
+                <li class="p-1">
+                    <a class="block text-lg no-underline font-bold {{ request()->routeIs('binshopsblog.index') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                        href="/blog">Blog</a>
+                </li>
+                <li class="p-1">
+                    <a class="block text-lg no-underline font-bold {{ request()->routeIs('portfolio') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                        href="/portfolio">Portfolio</a>
+                </li>
                 <!-- Authentication Links -->
                 @guest
                     {{-- @if (Route::has('login'))
@@ -35,20 +47,8 @@
                             <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
                         </li>
                     @endif --}}
-                    <li class="p-1">
-                        <a class=""
-                            href="/">Home</a>
-                    </li>
-                    <li class="p-1">
-                        <a class=""
-                            href="/blog">Blog</a>
-                    </li>
-                    <li class="p-1">
-                        <a class=""
-                            href="/portfolio">Portfolio</a>
-                    </li>
                 @else
-                    <li class="nav-item dropdown">
+                    {{-- <li class="nav-item dropdown">
                         <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                             data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                             {{ Auth::user()->name }}
@@ -65,13 +65,25 @@
                                 @csrf
                             </form>
                         </div>
-                    </li>
+                    </li> --}}
                 @endguest
+                <li class="pb-2">
+                    <h5>Social</h5>
+                </li>
+                <li class="flex flex-row flex-wrap">
+                    <a href="https://twitter.com/yourprofile" target="_blank"><iconify-icon icon="simple-icons:medium" width="24" height="24"></iconify-icon></a>
+                    <a href="https://github.com/yourprofile" target="_blank"><iconify-icon icon="akar-icons:github-fill" width="24" height="24"></iconify-icon></a>
+                    <a href="https://linkedin.com/in/yourprofile" target="_blank"><iconify-icon icon="icomoon-free:linkedin" width="24" height="24"></iconify-icon></a>
+                    <a href="https://instagram.com/yourprofile" target="_blank"><iconify-icon icon="akar-icons:instagram-fill" width="24" height="24"></iconify-icon></a>
+                    <a href="https://facebook.com/yourprofile" target="_blank"><iconify-icon icon="akar-icons:facebook-fill" width="24" height="24"></iconify-icon></a>
+                    <a href="mailto:youremail@example.com" target="_blank"><iconify-icon icon="akar-icons:mail-fill" width="24" height="24"></iconify-icon></a>
+                </li>
             </ul>
         </div>
     </div>
 </nav>
-<nav class="hidden lg:flex fixed top-0 z-40 w-full px-52 justify-between items-center p-4 bg-skl-black border-b-skl-grey border-b shadow-sm">
+<nav
+    class="hidden lg:flex fixed top-0 z-40 w-full px-52 justify-between items-center p-4 bg-skl-black border-b-skl-grey border-b shadow-sm">
     <div class="flex items-center">
         <a class="navbar-brand text-skl-pink hover:text-skl-purple transition-all"
             href="{{ url('/') }}">{{ config('app.name', 'Laravel') }}</a>
@@ -80,16 +92,15 @@
     </div>
     <ul class="hidden lg:flex justify-center items-center gap-4 p-2">
         <li class="p-1">
-            <a class="{{ request()->routeIs('home') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
-                href="/"
-                aria-current="page">Home</a>
+            <a class="block text-lg no-underline font-bold {{ request()->routeIs('home') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                href="/" aria-current="page">Home</a>
         </li>
         <li class="p-1">
-            <a class="{{ request()->routeIs('blog') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+            <a class="block text-lg no-underline font-bold {{ request()->routeIs('binshopsblog.index') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
                 href="/blog">Blog</a>
         </li>
         <li class="p-1">
-            <a class="{{ request()->routeIs('portfolio') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+            <a class="block text-lg no-underline font-bold {{ request()->routeIs('portfolio') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
                 href="/portfolio">Portfolio</a>
         </li>
     </ul>

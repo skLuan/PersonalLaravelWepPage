@@ -17,13 +17,13 @@
         </div>
     </section>
     <section>
-        <ul class="text-center my-14 w-3/12 mx-auto">
+        <ul class="text-center my-14 lg:w-3/12 mx-auto">
             <li class="p-1"><a class="p-2 border block font-bold text-lg border-skl-pink rounded-lg bg-skl-black-90" href="/blog">Blog</a></li>
             <li class="p-1"><a class="p-2 border block font-bold text-lg border-skl-pink rounded-lg bg-skl-black-90" href="/portfolio">Portfolio</a></li>
             {{-- <li><a href="/blog">Experiments</a></li> --}}
         </ul>
     </section>
-    <section class="m-1">
+    <section class="m-1 max-w-screen-lg mx-auto">
         <article class="p-4 rounded-sm bg-gray-950 bg-opacity-90">
             <div>
                 <h2 class="text-white">
