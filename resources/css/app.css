@@ -39,3 +39,9 @@
     }
     
 }
+
+@components {
+    .active {
+        @apply !text-skl-yellow;
+    }
+}

@@ -8,7 +8,7 @@
             <H2 class="pt-2">Luan Erazo</H2>
         </div>
 
-        <div class="mt-20">
+        <div class="mt-20 lg:w-8/12">
             <h4>My space in the web of interconected machines, and sometimes, humans</h4>
             <p>Hobbies sometimes blends with passion, with work. Creativity is the tendency
                 of try to do it yourself, using a guide with diferent materials. Here I am, experimenting with my human
@@ -17,7 +17,7 @@
         </div>
     </section>
     <section>
-        <ul class="text-center my-14">
+        <ul class="text-center my-14 w-3/12 mx-auto">
             <li class="p-1"><a class="p-2 border block font-bold text-lg border-skl-pink rounded-lg bg-skl-black-90" href="/blog">Blog</a></li>
             <li class="p-1"><a class="p-2 border block font-bold text-lg border-skl-pink rounded-lg bg-skl-black-90" href="/portfolio">Portfolio</a></li>
             {{-- <li><a href="/blog">Experiments</a></li> --}}

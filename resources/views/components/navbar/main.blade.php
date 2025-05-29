@@ -1,5 +1,5 @@
-<nav
-    class="navbar z-40 navbar-expand-md p-4 navbar-light fixed w-full bottom-0 bg-skl-black border-t-skl-grey border-t shadow-sm">
+<nav id="mobile-navbar"
+    class="navbar z-40 lg:hidden navbar-expand-md p-4 navbar-light fixed w-full bottom-0 bg-skl-black border-t-skl-grey border-t shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="{{ url('/') }}">
             {{ config('app.name', 'Laravel') }}
@@ -70,4 +70,27 @@
             </ul>
         </div>
     </div>
+</nav>
+<nav class="hidden lg:flex fixed top-0 z-40 w-full px-52 justify-between items-center p-4 bg-skl-black border-b-skl-grey border-b shadow-sm">
+    <div class="flex items-center">
+        <a class="navbar-brand text-skl-pink hover:text-skl-purple transition-all"
+            href="{{ url('/') }}">{{ config('app.name', 'Laravel') }}</a>
+        <span class="text-skl-purple ml-2">|</span>
+        <span class="text-skl-purple ml-2">David Luan Erazo</span>
+    </div>
+    <ul class="hidden lg:flex justify-center items-center gap-4 p-2">
+        <li class="p-1">
+            <a class="{{ request()->routeIs('home') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                href="/"
+                aria-current="page">Home</a>
+        </li>
+        <li class="p-1">
+            <a class="{{ request()->routeIs('blog') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                href="/blog">Blog</a>
+        </li>
+        <li class="p-1">
+            <a class="{{ request()->routeIs('portfolio') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                href="/portfolio">Portfolio</a>
+        </li>
+    </ul>
 </nav>
