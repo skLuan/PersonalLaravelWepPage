@@ -23,6 +23,7 @@
         @apply underline text-skl-pink focus:outline-none focus:ring-1 focus:ring-skl-yellow focus:text-skl-yellow;
     }
 
+    h1,
     h2,
     h3,
     h4,
@@ -30,7 +31,9 @@
     h6 {
         @apply font-skl-titles;
     }
-
+    h1 {
+        @apply font-bold text-5xl py-6;
+    }
     h2 {
         @apply font-bold text-5xl py-4;
     }
