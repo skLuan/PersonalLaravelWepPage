@@ -21,6 +21,7 @@ import { getDomElementCoordsAsYuka } from "./systems/coordenatesSettler";
 import { createSquid } from "./components/squid.js";
 import { entityManager } from "./systems/entityManager.js";
 import { PathCreator } from "./components/PathCreator.js";
+import LoaderManager from "./systems/LoaderManager.js";
 //import { loadBirds } from "./components/birds/birds.js";
 
 let camera;
@@ -47,27 +48,11 @@ class PortfolioWorld {
         const pointLightOne = createPointLight();
         // -------------------------------- Loop Init
         loop = new Loop(camera, scene, renderer);
-        // -------------------------------- Meshes
-        const squidManager = entityManager([]);
 
-        const path = new PathCreator();
-        for (let i = 0; i < 50; i++) {
-            const squid = createSquid(scene, "purple", 0.1, 0.5);
-            squid.position.set(
-                MathUtils.randFloatSpread(10),
-                0,
-                MathUtils.randFloatSpread(10)
-            );
-            squid.rotation.fromEuler(0, 2 * Math.PI * Math.random(), 0);
-            squid.updatePath(path.getPaths());
-            squidManager.add(squid);
-        }
-
-        scene.add(camera, hemisphereLight, helper,path.lines);
+        scene.add(camera, hemisphereLight, helper);
 
         //------------------------- Yuka ------------
         //const path = new PathCreator();
-        //scene.add(path.lines);
 
         // -------------------------------- Obtener el elemento <main>
         const mainEl = document.querySelector("main");
@@ -96,13 +81,36 @@ class PortfolioWorld {
             vector.unproject(camera);
             console.log("World position:", vector);
         });
-        loop.updatables.push(camera, squidManager, path);
+        loop.updatables.push(camera);
 
         const resizer = new Resizer(container, camera, renderer);
     }
-
     async init() {
-        //await loadBirds();
+        // -------------------------------- Meshes
+        const squidManager = entityManager([]);
+        const path = new PathCreator();
+
+        console.log("Creating squids");
+        const squidPromises = [];
+        for (let i = 0; i < 5; i++) {
+            squidPromises.push(createSquid(scene, "purple", 0.1, 0.5));
+        }
+        const squids = await Promise.all(squidPromises);
+        const scale = 0.03;
+        squids.forEach((squid) => {
+            squid.scale.set(scale, scale, scale);
+            squid.position.set(
+            MathUtils.randFloatSpread(40),
+            0,
+            MathUtils.randFloatSpread(100)
+            );
+            squid.rotation.fromEuler(0, 2 * Math.PI * Math.random(), 0);
+            squid.updatePath(path.getPaths());
+            squidManager.add(squid);
+        });
+        scene.add(path.lines);
+        loop.updatables.push(squidManager, path);
+        this.start();
     }
 
     keyBoardKeys() {
