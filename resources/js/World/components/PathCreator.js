@@ -9,10 +9,10 @@ class PathCreator {
         this.isDrawing = false;
         this.lines = null;
 
-        this.path.add(new YUKA.Vector3(-3, 0, -10));
-        this.path.add(new YUKA.Vector3(3, 0, -10));
-        this.path.add(new YUKA.Vector3(3, 0, 4));
-        this.path.add(new YUKA.Vector3(-3, 0, 3));
+        this.path.add(new YUKA.Vector3(-3, 0, -38));
+        this.path.add(new YUKA.Vector3(17, 0, -38));
+        this.path.add(new YUKA.Vector3(17, 0, 7));
+        this.path.add(new YUKA.Vector3(-15, 0, 5));
         //this.path.add(new YUKA.Vector3(2, 0, 40));
         // path.add(new YUKA.Vector3(0, 0, 0));
         // path.add(new YUKA.Vector3(4, 0, -4));

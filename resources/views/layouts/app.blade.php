@@ -40,7 +40,7 @@
     <div id="app" class="relative">
         <x-navbar.main />
 
-        <main class="py-4 !pb-20 max-w-[1400px] mx-auto">
+        <main class="py-4 !pb-20 max-w-[1400px] mx-auto lg:pt-28">
             @yield('content')
         </main>
         <x-footer />

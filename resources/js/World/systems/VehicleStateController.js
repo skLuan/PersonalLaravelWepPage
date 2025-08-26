@@ -38,7 +38,8 @@ class VehicleStateController {
             }
         });
         this.states.wander();
-        this.states.follow();
+        this.alignment();
+        //this.states.follow();
     }
     updateState(stateName) {
         //this.vehicle.steering.clear();
@@ -51,9 +52,8 @@ class VehicleStateController {
     }
     wander() {
         const wanderBehavior = new YUKA.WanderBehavior();
-        wanderBehavior.weight = 0.6; // Ajustar el peso del comportamiento
+        wanderBehavior.weight = 1.2; // Ajustar el peso del comportamiento
         this.vehicle.steering.add(wanderBehavior);
-        this.alignment();
     }
     alignment() {
         const alignmentBehavior = new YUKA.AlignmentBehavior();
@@ -62,8 +62,10 @@ class VehicleStateController {
         const cohesionBehavior = new YUKA.CohesionBehavior();
         cohesionBehavior.weight = 0.2;
         const separationBehavior = new YUKA.SeparationBehavior();
-        separationBehavior.weight = 2;
-        this.vehicle.steering.add(alignmentBehavior);
+        separationBehavior.weight = 5;
+        this.vehicle.steering.add(separationBehavior);
+        this.vehicle.steering.add(cohesionBehavior);
+        // this.vehicle.steering.add(alignmentBehavior);
     }
     follow() {
         // Remove any existing FollowPathBehavior before adding a new one
@@ -71,8 +73,8 @@ class VehicleStateController {
             (b) => !(b instanceof YUKA.FollowPathBehavior)
         );
         //this.vehicle.steering.clear();
-        this.vehicle.position.copy(this.path.current());
-        const followPathBehavior = new YUKA.FollowPathBehavior(this.path, 0.7);
+        //this.vehicle.position.copy(this.path.current());
+        const followPathBehavior = new YUKA.FollowPathBehavior(this.path, 3);
         this.vehicle.steering.add(followPathBehavior);
     }
     removeSteering(BehaviorType) {
@@ -82,6 +84,7 @@ class VehicleStateController {
     }
     onPath() {
         const onPathBehavior = new YUKA.OnPathBehavior(this.path);
+        onPathBehavior.weight = 1; // Ajustar el peso del comportamiento
         this.vehicle.steering.add(onPathBehavior);
     }
     updatePath(newPath) {
@@ -89,6 +92,7 @@ class VehicleStateController {
         newPath._waypoints.forEach((point) => {
             this.path.add(point.clone());
         });
+        this.path.loop = true;
         this.follow(); // Reapply the follow behavior with the new path
     }
 

@@ -58,7 +58,7 @@ class PortfolioWorld {
         const mainEl = document.querySelector("main");
         if (mainEl) {
             // Configura la cámara en una posición fija
-            camera.position.set(0, 30, 0); // Escala la altura (ajusta el factor 0.01 según necesidad)
+            camera.position.set(0, 120, 0); // Escala la altura (ajusta el factor 0.01 según necesidad)
             camera.lookAt(0, 0, 0);
             let lastScrollY = window.pageYOffset;
             document.addEventListener("scroll", () => {
@@ -89,21 +89,21 @@ class PortfolioWorld {
         // -------------------------------- Meshes
         const squidManager = entityManager([]);
         const path = new PathCreator();
-
+        console.log(path);
         console.log("Creating squids");
         const squidPromises = [];
         for (let i = 0; i < 5; i++) {
-            squidPromises.push(createSquid(scene, "purple", 0.1, 0.5));
+            squidPromises.push(createSquid(scene, "purple", 1, 5));
         }
         const squids = await Promise.all(squidPromises);
-        const scale = 0.03;
         squids.forEach((squid) => {
-            squid.scale.set(scale, scale, scale);
             squid.position.set(
-            MathUtils.randFloatSpread(40),
+            MathUtils.randFloatSpread(-17,17),
             0,
-            MathUtils.randFloatSpread(100)
+            MathUtils.randFloatSpread(-38, -30)
             );
+            squid.maxSpeed = 5;
+            squid.maxAcceleration = 2;
             squid.rotation.fromEuler(0, 2 * Math.PI * Math.random(), 0);
             squid.updatePath(path.getPaths());
             squidManager.add(squid);
