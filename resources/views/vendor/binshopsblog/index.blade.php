@@ -5,22 +5,22 @@
 @endsection
 
 @section('content')
-
-    <div class='col-sm-12 BinshopsBlog_container'>
+    <x-three-canvas />
+    <div class='col-sm-12 BinshopsBlog_container relative z-10'>
         <section class="row  mb-12" id="heroOne">
             <article class="px-24 pr-8 py-4">
                 <h3>Reflexiones sobre existir como humano.</h3>
                 <p>Humanos arraigados al tiempo y no a la materia.</p>
             </article>
-            <figure class="w-full relative">
+            {{-- <figure class="w-full relative">
                 <picture>
                     <source media="(min-width: 920px)" srcset="/imgs/hero1.jpg">
                     <img class="" width="100%" src="/blog_images/banner_mobile.png" alt="">
                 </picture>
-                <h2 class="text-skl-white-true bg-skl-black px-10 py-6 my-12 absolute top-0">
-                    Blog
-                </h2>
-            </figure>
+            </figure> --}}
+            <h2 class="text-skl-white-true px-10 py-6 my-12">
+                Blog
+            </h2>
         </section>
         <div class="row" id="">
             <div class="col-md-9">
@@ -47,9 +47,9 @@
                         <p class='text-center'>{{ $BinshopsBlog_category->category_description }}</p>
                     @endif
                 @endif
-
-                <div class="container cards mx-auto">
-                    <div class="row px-3 grid gap-3 lg:grid-cols-3" id="partial-container">
+                {{-- Inicio Loop --}}
+                <div class="container cards mx-auto lg:max-w-[80%] items-center">
+                    <div class="row lg:px-3 flex flex-col mx-auto" id="partial-container">
                         @forelse($posts as $post)
                             @include('binshopsblog::partials.index_loop')
                         @empty

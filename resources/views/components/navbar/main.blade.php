@@ -1,5 +1,5 @@
 <nav id="mobile-navbar"
-    class="navbar z-40 lg:hidden navbar-expand-md p-4 navbar-light fixed w-full bottom-0 bg-skl-black border-t-skl-grey border-t shadow-sm">
+    class="navbar z-50 lg:hidden navbar-expand-md p-4 navbar-light fixed w-full bottom-0 bg-skl-black border-t-skl-grey border-t shadow-sm">
     <div class="container">
         <a class="navbar-brand" href="{{ url('/') }}">
             {{ config('app.name', 'Laravel') }}

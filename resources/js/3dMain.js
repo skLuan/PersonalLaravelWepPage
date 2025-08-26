@@ -2,12 +2,12 @@ import { PortfolioWorld } from "./World/PortfolioWorld";
 
 export async function main() {
     const container = document.querySelector("#scene-container");
-    const btnRender = document.querySelector("#btn-render");
+    if (!container) {
+        console.error('Element with id "scene-container" not found.');
+        return;
+    }
 
     const portfolioWorld = new PortfolioWorld(container);
-    // btnRender.addEventListener('click', (e)=>{
-    //     // console.log('sisa');
-    // });
 
     await portfolioWorld.init();
     portfolioWorld.start();
