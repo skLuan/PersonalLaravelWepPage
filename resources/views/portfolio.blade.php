@@ -35,29 +35,31 @@
                     <x-title-web id="title-about-me" class="justify-end">About Me</x-title-web>
                 </li>
             </ul>
-            <p>
-                I am a self-taught digital creator with over 4 years of experience in web design and development, passionate
-                about continuous learning and innovation.
-
-                My multidisciplinary approach allows me to tackle projects from different perspectives, integrating UX
-                Design, Frontend Development, and knowledge of digital marketing to provide complete, user-centered
-                solutions.
-
-                I draw inspiration from science, curiosity, and creativity, always striving to understand the nature of
-                things and explore new ways to solve problems. With skills in PHP, HTML, CSS, JS, and their frameworks, I
-                combine technical thinking with design to create intuitive and efficient user experiences.
-            </p>
-            <p>
-                I value empathy and critical thinking, which enables me to connect with user needs while also considering
-                business objectives.
-
-                I always keep an eye on the future, exploring new technologies and methods to improve digital experiences. I
-                seek to work in dynamic environments that foster creativity and innovation, where I can continue creating
-                solutions that make a difference.
-
-                Currently based in Cali, Colombia, I am fluent in Spanish and English, which allows me to collaborate with
-                global teams without communication barriers.
-            </p>
+            <div class="bg-skl-black-50">
+                <p>
+                    I am a self-taught digital creator with over 4 years of experience in web design and development, passionate
+                    about continuous learning and innovation.
+    
+                    My multidisciplinary approach allows me to tackle projects from different perspectives, integrating UX
+                    Design, Frontend Development, and knowledge of digital marketing to provide complete, user-centered
+                    solutions.
+    
+                    I draw inspiration from science, curiosity, and creativity, always striving to understand the nature of
+                    things and explore new ways to solve problems. With skills in PHP, HTML, CSS, JS, and their frameworks, I
+                    combine technical thinking with design to create intuitive and efficient user experiences.
+                </p>
+                <p>
+                    I value empathy and critical thinking, which enables me to connect with user needs while also considering
+                    business objectives.
+    
+                    I always keep an eye on the future, exploring new technologies and methods to improve digital experiences. I
+                    seek to work in dynamic environments that foster creativity and innovation, where I can continue creating
+                    solutions that make a difference.
+    
+                    Currently based in Cali, Colombia, I am fluent in Spanish and English, which allows me to collaborate with
+                    global teams without communication barriers.
+                </p>
+            </div>
         </article>
     </section>
     <section id="whatIDo" class="pt-6 lg:w-10/12 mx-auto">

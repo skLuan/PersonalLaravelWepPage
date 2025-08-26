@@ -1,5 +1,5 @@
 <nav id="footer"
-    class="bg-skl-grey pb-10 lg:pb-0 text-skl-white flex flex-col items-center border-t-2 border-skl-grey">
+    class="bg-skl-grey pb-10 lg:pb-0 text-skl-white flex flex-col items-center border-t-2 border-skl-grey z-50 relative">
     <div class="text-center mb-4 w-full">
         <ul class="flex flex-row items-center justify-center flex-wrap w-full border-b-2 border-skl-black">
             <li class="p-1 mx-2">

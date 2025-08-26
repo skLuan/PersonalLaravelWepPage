@@ -1,14 +1,14 @@
 @extends('layouts.app')
 @section('content')
     <x-three-canvas />
-    <section class="m-2 mx-4 lg:w-10/12 lg:mx-auto">
+    <section class="m-2 mx-4 lg:w-10/12 lg:mx-auto min-h-[80dvh] flex flex-col">
         <div class="p-2 flex flex-col justify-end text-right">
-            <span>David
+            <span class="text-3xl">David
             </span>
-            <H2 class="pt-2">Luan Erazo</H2>
+            <H2 class="">Luan Erazo</H2>
         </div>
 
-        <div class="mt-20 lg:w-8/12">
+        <div class="mt-auto lg:w-8/12 bg-skl-black-90 rounded-sm shadow-sm shadow-skl-grey p-2">
             <h4>My space in the web of interconected machines, and sometimes, humans</h4>
             <p>Hobbies sometimes blends with passion, with work. Creativity is the tendency
                 of try to do it yourself, using a guide with diferent materials. Here I am, experimenting with my human
@@ -23,7 +23,7 @@
             {{-- <li><a href="/blog">Experiments</a></li> --}}
         </ul>
     </section>
-    <section class="m-1 max-w-screen-lg mx-auto">
+    <section class="m-1 max-w-screen-lg mx-auto hidden">
         <article class="p-4 rounded-sm bg-gray-950 bg-opacity-90">
             <div>
                 <h2 class="text-white">
