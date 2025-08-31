@@ -17,7 +17,7 @@ import { createGroup, createMeshGroup } from "./components/meshGroup.js";
 import { MathUtils } from "three";
 import * as YUKA from "yuka";
 import * as THREE from "three";
-import { getDomElementCoordsAsYuka } from "./systems/coordenatesSettler";
+import { getDomElementCoordsAsYuka } from "./systems/coordenatesSettler.js";
 import { createSquid } from "./components/squid.js";
 import { entityManager } from "./systems/entityManager.js";
 import { PathCreator } from "./components/PathCreator.js";
@@ -30,7 +30,7 @@ let scene;
 let light;
 let loop;
 let cubeGroup;
-class PortfolioWorld {
+class BlogWorld {
     constructor(container) {
         // -------------------------------- Helpers
         const helper = helpers();
@@ -88,19 +88,25 @@ class PortfolioWorld {
     async init() {
         // -------------------------------- Meshes
         const squidManager = entityManager([]);
-        const path = new PathCreator("#101828");
+        const yukaPath = new YUKA.Path();
+        yukaPath.add(new YUKA.Vector3(-3, 0, -38));
+        yukaPath.add(new YUKA.Vector3(17, 0, -38));
+        yukaPath.add(new YUKA.Vector3(10, 0, 4));
+        yukaPath.add(new YUKA.Vector3(-14, 0, -10));
+
+        const path = new PathCreator("#FFC030",yukaPath);
         console.log(path);
         console.log("Creating squids");
         const squidPromises = [];
         for (let i = 0; i < 5; i++) {
-            squidPromises.push(createSquid(scene, "#DC105F", 1, 5));
+            squidPromises.push(createSquid(scene, "purple", 1, 5));
         }
         const squids = await Promise.all(squidPromises);
         squids.forEach((squid) => {
             squid.position.set(
-            MathUtils.randFloatSpread(-17,17),
-            0,
-            MathUtils.randFloatSpread(-38, -30)
+                MathUtils.randFloatSpread(-17, 17),
+                0,
+                MathUtils.randFloatSpread(-38, -30)
             );
             squid.maxSpeed = 5;
             squid.maxAcceleration = 2;
@@ -142,4 +148,4 @@ function getScene() {
     return scene;
 }
 
-export { PortfolioWorld, getScene };
+export { BlogWorld, getScene };
