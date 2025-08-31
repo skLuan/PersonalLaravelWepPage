@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+    html {
+        scroll-behavior: smooth;
+    }
     body {
         @apply text-skl-white font-skl-nunito;
     }
@@ -23,6 +26,7 @@
         @apply underline text-skl-pink focus:outline-none focus:ring-1 focus:ring-skl-yellow focus:text-skl-yellow;
     }
 
+
     h1,
     h2,
     h3,
@@ -41,7 +45,7 @@
         @apply font-semibold italic text-3xl py-2 leading-tight;
     }
     h4 {
-        @apply font-semibold text-2xl;
+        @apply font-bold text-2xl;
     }
     h5 {
         @apply font-medium text-xl;
@@ -51,6 +55,6 @@
     }
 }
 
-.active {
-    @apply !text-skl-yellow text-base font-normal;
+a.active {
+    @apply !text-skl-yellow text-base font-normal font-skl-nunito;
 }

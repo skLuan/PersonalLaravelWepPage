@@ -2,6 +2,8 @@ const menuBtn = document.querySelector('#burger-menu-btn');
 const menuBtnIcon = menuBtn.querySelector('.icony');
 const mobileMenu = document.querySelector('#mobile-menu');
 
+const topBtn = document.querySelector('#top-btn');
+
 function toggler() {
     mobileMenu.classList.toggle('translate-x-full');
     mobileMenu.classList.toggle('mx-1');
@@ -21,6 +23,17 @@ document.addEventListener('click',(e) =>{
 })
 menuBtn.addEventListener('click',(e) => {
     toggler();
-    console.log('sisaaaa')//toggler();
 })
 
+window.addEventListener('scroll', () => {
+    if (window.scrollY >= window.innerHeight) {
+        topBtn.parentElement.style.transform = 'translateX(0)';
+        topBtn.style.pointerEvents = 'auto';
+    } else {
+        topBtn.parentElement.style.transform = 'translateX(60px)';
+        topBtn.style.pointerEvents = 'none';
+    }
+});
+topBtn.addEventListener('click',(e) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
