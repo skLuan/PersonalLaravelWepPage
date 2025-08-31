@@ -51,12 +51,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 Auth::routes();
 
 
 Route::resource('projects', ProjectController::class);
-Route::resource('portfolio', PortfolioController::class);
+Route::resource('portfolio', PortfolioController::class)->name('index', 'portfolio');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/', function () {
+    return view('home');
+})->name('home');
+// Route::get('/blog', function () {
+//     return view('vendor.binshopsblog.index');
+// })->name('blog');
+
+// Route::get('/', 'BinshopsBlogReaderController@index')
+//     ->name('binshopsblog.index');
+
+// Route::redirect('/', 'front-page');

@@ -18,8 +18,10 @@
         href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap"
         rel="stylesheet">
     <!-- Scripts -->
-    @vite(['resources/sass/app.scss'])
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if (route('portfolio'))
+    @vite(['resources/js/3dMain.js'])
+    @endif
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GOOGLE_TAG_ID') }}"></script>
@@ -38,7 +40,7 @@
     <div id="app" class="relative">
         <x-navbar.main />
 
-        <main class="py-4 !pb-20">
+        <main class="py-4 !pb-20 max-w-[1400px] mx-auto lg:pt-28">
             @yield('content')
         </main>
         <x-footer />

@@ -18,7 +18,11 @@ export default {
                 'skl-titles': ['"Chakra Petch"', 'serif']
             },
             colors: {
-                'skl-black': '#0A090B',
+                'skl-black': {
+                    DEFAULT: '#0A090B',
+                    '90': 'rgba(10, 9, 11, 0.9)',
+                    '50': 'rgba(10, 9, 11, 0.5)',
+                },
                 'skl-grey': '#101828',
                 'skl-white': {
                     DEFAULT: '#D9D9D9',

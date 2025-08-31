@@ -24,44 +24,44 @@
             @csrf
 
             <div class="mb-4">
-                <label for="title" class="block text-sm font-medium text-gray-700">Título</label>
+                <label for="title" class="block text-sm font-medium ">Título</label>
                 <input type="text" name="title" id="title" value="{{ old('title') }}"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    class="mt-1 block w-full text-skl-grey border-gray-300 rounded-md shadow-sm focus:border-skl-pink focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     required>
             </div>
 
             <div class="mb-4">
-                <label for="short_description" class="block text-sm font-medium text-gray-700">Descripción Corta</label>
+                <label for="short_description" class="block text-sm font-medium ">Descripción Corta</label>
                 <textarea name="short_description" id="short_description" rows="3"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    class="mt-1 block w-full text-skl-grey border-gray-300 rounded-md shadow-sm focus:border-skl-pink focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     required>{{ old('short_description') }}</textarea>
             </div>
 
             <div class="mb-4">
-                <label for="image_path" class="block text-sm font-medium text-gray-700">URL de la Imagen</label>
+                <label for="image_path" class="block text-sm font-medium ">URL de la Imagen</label>
                 <input type="url" name="image_path" id="image_path" value="{{ old('image_path') }}"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    class="mt-1 block w-full text-skl-grey border-gray-300 rounded-md shadow-sm focus:border-skl-pink focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     required>
             </div>
 
             <div class="mb-4">
-                <label for="site_url" class="block text-sm font-medium text-gray-700">URL del Sitio</label>
+                <label for="site_url" class="block text-sm font-medium ">URL del Sitio</label>
                 <input type="url" name="site_url" id="site_url" value="{{ old('site_url') }}"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    class="mt-1 block w-full text-skl-grey border-gray-300 rounded-md shadow-sm focus:border-skl-pink focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
             </div>
 
             <div class="mb-4">
-                <label for="body" class="block text-sm font-medium text-gray-700">Contenido</label>
+                <label for="body" class="block text-sm font-medium ">Contenido</label>
                 <textarea name="body" id="body" rows="6"
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    class="mt-1 block w-full text-skl-grey border-gray-300 rounded-md shadow-sm focus:border-skl-pink focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     required>{{ old('body') }}</textarea>
                 <p class="text-xs text-gray-500 mt-1">Usa Markdown o HTML para el contenido detallado.</p>
             </div>
 
             <div class="mb-4">
-                <label for="skills" class="block text-sm font-medium text-gray-700">Habilidades</label>
+                <label for="skills" class="block text-sm font-medium ">Habilidades</label>
                 <select name="skills[]" id="skills" multiple
-                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    class="mt-1 block w-full text-skl-grey border-gray-300 rounded-md shadow-sm focus:border-skl-pink focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     required>
                     @foreach ($skills as $skill)
                         <option value="{{ $skill->id }}">{{ $skill->name }}</option>

@@ -33,7 +33,7 @@
 <body class="antialiased bg-skl-black font-skl-nunito">
     <div class="container max-w-screen-2xl mx-auto px-4">
         <section class="" id="heroOne">
-            <article class="w-1/2 mx-auto p-12">
+            <article class="w-1/2 lg:w-1/3 mx-auto p-12">
                 <h3>Reflexiones sobre existir como humano.</h3>
                 <p>Humanos arraigados al tiempo y no a la materia.</p>
             </article>

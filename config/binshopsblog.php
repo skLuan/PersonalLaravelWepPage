@@ -143,7 +143,7 @@ return [
         //      'disqus' (uses https://disqus.com/, please enter further config options below),
         //      'custom' (will load binshopsblog::partials.custom_comments, which you can copy to your vendor view dir to customise
         //      'disabled' (turn comments off)
-        'type_of_comments_to_show' => 'built_in', // default: built_in
+        'type_of_comments_to_show' => 'disabled', // default: built_in
 
         'max_num_of_comments_to_show' => 1000, // max num of comments to show on a single blog post. Set to a lower number for smaller page sizes. No comment pagination is built in yet.
 
@@ -180,5 +180,5 @@ return [
     ],
 
     //Shows full text of post in listing pages like search result page or category page. Now it shows a preview
-    'show_full_text_at_list' => true,
+    'show_full_text_at_list' => false,
 ];
