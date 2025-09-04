@@ -22,7 +22,6 @@
     @if (route('portfolio'))
     @vite(['resources/js/3dMain.js'])
     @endif
-</head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GOOGLE_TAG_ID') }}"></script>
 <script>
@@ -44,6 +43,7 @@
     })(window, document, "clarity", "script", "t5bhdus54g");
 </script>
 
+</head>
 <body class="antialiased bg-skl-black font-skl-nunito">
     <div id="app" class="relative">
         <x-navbar.main />
