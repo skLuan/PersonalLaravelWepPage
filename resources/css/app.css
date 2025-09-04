@@ -20,7 +20,7 @@
 
     p,
     a {
-        @apply text-base p-2;
+        @apply text-lg p-2;
     }
     a {
         @apply underline text-skl-pink focus:outline-none focus:ring-1 focus:ring-skl-yellow focus:text-skl-yellow;
