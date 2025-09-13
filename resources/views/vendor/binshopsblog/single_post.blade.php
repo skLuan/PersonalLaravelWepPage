@@ -12,9 +12,9 @@
             </div>
         @endif
 
-
         <div class='row'>
             <div class=''>
+                <x-darkmode-button />
 
                 @include('binshopsblog::partials.show_errors')
                 @include('binshopsblog::partials.full_post_details')

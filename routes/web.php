@@ -20,9 +20,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+require __DIR__ . '/auth.php';
 // Route::get('/blog', function() {
-//     return redirect('https://erazoluan.notion.site/Blog-060c7617bd494cbbbd7badfff7afbe35');
-// })->name('blog');
+    //     return redirect('https://erazoluan.notion.site/Blog-060c7617bd494cbbbd7badfff7afbe35');
+    // })->name('blog');
 // Route::get('/blog/inWork', [CurriculumVitae::class, 'showBlog']);
 Route::get('/inWork', function () {
     return view('inWork');
@@ -51,7 +52,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+})->name('privacy-policy');
+Route::redirect('/privacy', '/privacy-policy');
+Route::redirect('/privacypolicy', '/privacy-policy');
+Route::redirect('/privacypol', '/privacy-policy');
+Route::redirect('/privacypolcy', '/privacy-policy');
+Route::redirect('/privac', '/privacy-policy');
+Route::redirect('/policy', '/privacy-policy');
+Route::redirect('/pp', '/privacy-policy');
 
 Auth::routes();
 

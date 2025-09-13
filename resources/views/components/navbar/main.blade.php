@@ -1,23 +1,23 @@
 <nav id="mobile-navbar"
-    class="navbar z-50 lg:hidden navbar-expand-md p-4 navbar-light fixed w-full bottom-0 bg-skl-black border-t-skl-grey border-t shadow-sm">
+    class="navbar z-50 lg:hidden navbar-expand-md p-4 navbar-light fixed w-full bottom-0 bg-skl-white dark:bg-skl-black border-t-skl-grey border-t shadow-sm">
     <div class="container">
         {{-- <a class="navbar-brand" href="{{ url('/') }}">
                 Home
             </a> --}}
-        <div class="z-50 absolute right-0 bottom-24 flex flex-row transition-all">
+        <div class="z-50 absolute right-0 bottom-32 flex flex-row transition-all">
             <button id="burger-menu-btn"
-                class="navbar-toggler  border border-skl-purple rounded-full p-2 mr-4 bg-skl-black flex" type="button"
+                class="navbar-toggler border border-skl-purple rounded-full p-2 mr-4 bg-skl-white-true dark:bg-skl-black flex" type="button"
                 data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                <iconify-icon class="text-skl-pink transition-all icony m-auto" icon="tabler:menu-3" width="32"
-                    height="32"></iconify-icon>
+                <iconify-icon class="icony text-2xl text-skl-pink transition-all icony m-auto" icon="tabler:menu-3"
+                    width="32" height="32"></iconify-icon>
             </button>
             <button id="top-btn"
-                class="navbar-toggler flex border border-skl-purple rounded-full p-2 mr-2 bg-skl-black " type="button"
-                data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                <iconify-icon class="text-skl-pink transition-all icony m-auto min-w-8" icon="tabler:arrow-bar-to-up"
-                    width="32" height="32"></iconify-icon>
+                class="navbar-toggler flex border border-skl-purple rounded-full p-2 mr-2 bg-skl-white-true dark:bg-skl-black " type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+                <iconify-icon class="text-2xl text-skl-pink transition-all icony m-auto min-w-8"
+                    icon="tabler:arrow-bar-to-up" width="32" height="32"></iconify-icon>
             </button>
         </div>
 
@@ -80,18 +80,18 @@
                     <h5>Social</h5>
                 </li>
                 <li class="flex flex-row flex-wrap">
-                    <a href="https://twitter.com/yourprofile" target="_blank"><iconify-icon icon="simple-icons:medium"
-                            width="24" height="24"></iconify-icon></a>
-                    <a href="https://github.com/yourprofile" target="_blank"><iconify-icon icon="akar-icons:github-fill"
-                            width="24" height="24"></iconify-icon></a>
-                    <a href="https://linkedin.com/in/yourprofile" target="_blank"><iconify-icon
+                    <a class="pb-0" href="https://twitter.com/yourprofile" target="_blank"><iconify-icon class="text-2xl"
+                            icon="simple-icons:medium" width="24" height="24"></iconify-icon></a>
+                    <a class="pb-0" href="https://github.com/yourprofile" target="_blank"><iconify-icon class="text-2xl"
+                            icon="akar-icons:github-fill" width="24" height="24"></iconify-icon></a>
+                    <a class="pb-0" href="https://linkedin.com/in/yourprofile" target="_blank"><iconify-icon class="text-2xl"
                             icon="icomoon-free:linkedin" width="24" height="24"></iconify-icon></a>
-                    <a href="https://instagram.com/yourprofile" target="_blank"><iconify-icon
+                    <a class="pb-0" href="https://instagram.com/yourprofile" target="_blank"><iconify-icon class="text-2xl"
                             icon="akar-icons:instagram-fill" width="24" height="24"></iconify-icon></a>
-                    <a href="https://facebook.com/yourprofile" target="_blank"><iconify-icon
+                    <a class="pb-0" href="https://facebook.com/yourprofile" target="_blank"><iconify-icon class="text-2xl"
                             icon="akar-icons:facebook-fill" width="24" height="24"></iconify-icon></a>
-                    <a href="mailto:youremail@example.com" target="_blank"><iconify-icon icon="akar-icons:mail-fill"
-                            width="24" height="24"></iconify-icon></a>
+                    <a class="pb-0" href="mailto:youremail@example.com" target="_blank"><iconify-icon class="text-2xl"
+                            icon="akar-icons:mail-fill" width="24" height="24"></iconify-icon></a>
                 </li>
             </ul>
         </div>

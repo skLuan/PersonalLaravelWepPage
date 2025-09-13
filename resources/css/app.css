@@ -7,20 +7,20 @@
         scroll-behavior: smooth;
     }
     body {
-        @apply text-skl-white font-skl-nunito;
+        @apply font-skl-nunito;
     }
     section {
         @apply px-4 z-10 relative;
     }
 
     p,
-    li {
+    li, a {
         @apply font-skl-nunito;
     }
 
     p,
     a {
-        @apply text-base p-2;
+        @apply text-xl p-2 tracking-wide leading-relaxed;
     }
     a {
         @apply underline text-skl-pink focus:outline-none focus:ring-1 focus:ring-skl-yellow focus:text-skl-yellow;
@@ -36,10 +36,10 @@
         @apply font-skl-titles;
     }
     h1 {
-        @apply font-bold text-5xl py-6;
+        @apply font-bold text-3xl lg:text-5xl py-6;
     }
     h2 {
-        @apply font-bold text-5xl py-4;
+        @apply font-bold text-3xl py-4;
     }
     h3 {
         @apply font-semibold italic text-3xl py-2 leading-tight;
@@ -53,8 +53,15 @@
     h6 {
         @apply font-medium text-lg;
     }
+    a.active {
+        @apply !text-skl-yellow text-base font-normal font-skl-nunito;
+    }
+    blockquote {
+        @apply border-l-4 dark:border-skl-yellow border-skl-black-50 pl-4 italic leading-normal my-2;
+    }
+    blockquote p {
+        @apply p-0;
+    }
 }
 
-a.active {
-    @apply !text-skl-yellow text-base font-normal font-skl-nunito;
-}
+
