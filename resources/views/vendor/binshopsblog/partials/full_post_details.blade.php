@@ -3,9 +3,9 @@
         Post</a>
 @endif
 <section class="blog_post_header relative mb-12 lg:w-7/12 lg:mx-auto">
-    <h1 class='blog_title lg:mt-16 text-shadow-md bg-skl-black-50 w-full'>{{ $post->title }}</h1>
+    <h1 class='blog_title lg:mt-16 text-shadow-md dark:bg-skl-black-50 w-full'>{{ $post->title }}</h1>
     <div class="flex flex-col lg:flex-row items-center">
-        <h5 class='blog_subtitle text-shadow-md bg-skl-black-50 w-full mb-12 lg:mb-0'>{{ $post->subtitle }}</h5>
+        <h5 class='blog_subtitle text-shadow-md dark:bg-skl-black-50 w-full mb-12 lg:mb-0'>{{ $post->subtitle }}</h5>
         <figure class="overflow-hidden md:h-80 lg:h-auto lg:ml-auto relative rounded-sm -z-10 lg:w-7/12 right-0 bg-gray-200">
             <picture>
                 <?= $post->image_tag('large', false, 'w-full md:-translate-y-1/2 lg:translate-y-0') ?>
