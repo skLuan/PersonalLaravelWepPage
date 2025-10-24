@@ -8,6 +8,7 @@ use App\Providers\NotionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,12 +68,100 @@ Auth::routes();
 
 
 Route::resource('projects', ProjectController::class);
-Route::resource('portfolio', PortfolioController::class)->name('index', 'portfolio');
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+$availableLocales = config('app.available_locales', ['en']);
+
+// Localized routes
+Route::prefix('{locale}')
+    ->where(['locale' => implode('|', $availableLocales)])
+    ->middleware(['setlocale'])
+    ->group(function () use ($availableLocales) {
+
+    // Home routes
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/', function () {
+        return view('home');
+    })->name('home');
+
+    // Portfolio routes
+    Route::resource('portfolio', PortfolioController::class)->names([
+        'index' => 'portfolio',
+        'show' => 'portfolio.show',
+        'create' => 'portfolio.create',
+        'store' => 'portfolio.store',
+        'edit' => 'portfolio.edit',
+        'update' => 'portfolio.update',
+        'destroy' => 'portfolio.destroy',
+    ]);
+
+    // Blog routes (BinshopsBlog package)
+    Route::get('/blog', function () {
+        return view('vendor.binshopsblog.index');
+    })->name('binshopsblog.index');
+
+    // Other routes that need localization
+    Route::get('/privacy-policy', function () {
+        return view('privacy-policy');
+    })->name('privacy-policy');
+
+});
+
+// Fallback routes for default locale (English)
+Route::middleware(['setlocale'])->group(function () {
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home.fallback');
+    Route::get('/', function () {
+        return view('home');
+    })->name('home.fallback');
+
+    Route::resource('portfolio', PortfolioController::class)->names([
+        'index' => 'portfolio.fallback',
+        'show' => 'portfolio.show.fallback',
+        'create' => 'portfolio.create.fallback',
+        'store' => 'portfolio.store.fallback',
+        'edit' => 'portfolio.edit.fallback',
+        'update' => 'portfolio.update.fallback',
+        'destroy' => 'portfolio.destroy.fallback',
+    ]);
+
+    // Blog routes (BinshopsBlog package)
+    Route::get('/blog', function () {
+        return view('vendor.binshopsblog.index');
+    })->name('binshopsblog.index.fallback');
+
+    Route::get('/privacy-policy', function () {
+        return view('privacy-policy');
+    })->name('privacy-policy.fallback');
+});
+
+// Language switcher route
+Route::get('/locale/{locale}', function ($locale) {
+    $availableLocales = config('app.available_locales', ['en']);
+
+    if (!in_array($locale, $availableLocales)) {
+        abort(404);
+    }
+
+    // Store locale in session
+    session(['locale' => $locale]);
+
+    // Redirect back to the same page with new locale
+    $previousUrl = url()->previous();
+    $parsedUrl = parse_url($previousUrl);
+
+    // If URL already has a locale prefix, replace it
+    $path = $parsedUrl['path'] ?? '/';
+    foreach ($availableLocales as $availableLocale) {
+        if (str_starts_with($path, '/' . $availableLocale)) {
+            $path = substr($path, strlen('/' . $availableLocale));
+            break;
+        }
+    }
+
+    // Add new locale prefix
+    $newPath = '/' . $locale . $path;
+
+    return redirect($newPath);
+})->name('locale.switch')->where(['locale' => implode('|', $availableLocales)]);
 // Route::get('/blog', function () {
 //     return view('vendor.binshopsblog.index');
 // })->name('blog');

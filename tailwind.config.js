@@ -37,7 +37,11 @@ export default {
                     DEFAULT: '#FFC030',
                 },
                 'skl-purple': '#301770',
-            }
+            },
+            maxWidth: {
+                '10/12': '83.333333%',
+                '11/12': '88.888889%',
+            },
         },
     },
     darkMode: 'class',

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ in_array(app()->getLocale(), ['ar', 'he', 'fa', 'ur']) ? 'rtl' : 'ltr' }}">
 
 <head>
     <meta charset="utf-8">
@@ -32,7 +32,7 @@
         rel="stylesheet">
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @if (route('portfolio') || route('blog'))
+    @if (request()->routeIs('portfolio*') || request()->routeIs('binshopsblog*'))
         @vite(['resources/js/3dMain.js'])
     @endif
     <!-- Google tag (gtag.js) -->
