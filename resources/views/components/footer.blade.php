@@ -1,5 +1,5 @@
 <footer class="bg-skl-grey text-skl-white flex flex-col items-center border-t-2 border-skl-grey z-50 relative pb-12">
-    <nav aria-label="Footer navigation">
+    <nav aria-label="Footer navigation" class="self-start w-full mx-auto max-w-10/12">
         <ul class="flex flex-row flex-wrap items-center justify-center w-full border-b-2 border-skl-black p-4">
             <li class="p-1 mx-2">
                 <a class="block text-lg no-underline font-bold text-skl-pink hover:text-skl-purple transition-all {{ request()->routeIs('home') ? 'active' : '' }}"
@@ -16,10 +16,10 @@
         </ul>
     </nav>
 
-    <section class="p-3 lg:flex lg:justify-evenly w-full">
-        <p class="mb-4 text-center lg:text-left">This site is a personal project showcasing my work and skills.</p>
+    <section class="p-3 lg:flex lg:justify-evenly items-center w-full max-w-10/12 mx-auto">
+        <p class="text-center text-base lg:text-left">{{ __('messages.footer.personal_message') }}</p>
         <div class="text-center lg:text-left lg:flex flex-row items-center justify-center">
-            <h2 class="text-lg font-semibold p-0">Follow me on</h2>
+            <h2 class="text-lg font-semibold p-0">{{ __('messages.footer.follow_me') }}</h2>
             <ul class="flex flex-row flex-wrap items-center justify-center" aria-label="Social media links">
                 <li>
                     <a class="inline-flex" href="https://twitter.com/yourprofile" target="_blank"
@@ -69,19 +69,16 @@
     <section
         class="border-t border-skl-grey bg-skl-black w-full p-4 text-center lg:flex lg:flex-row justify-center items-end">
         <p class="text-sm">
-            Built with <a class="p-0" href="https://laravel.com" target="_blank" rel="noopener noreferrer"
-                class="text-skl-pink">Laravel</a> and
+            {{ __('messages.footer.built_with') }} <a class="p-0" href="https://laravel.com" target="_blank" rel="noopener noreferrer"
+                class="text-skl-pink">Laravel</a> {{ __('messages.footer.and') }}
             <a class="p-0" href="https://binshops.com/laravel-blog-package" target="_blank" rel="noopener noreferrer"
                 class="text-skl-pink">BinshopsBlog</a>.
         </p>
-        <p class="text-sm">© {{ date('Y') }} Luan Erazo. All rights reserved.</p>
+        <p class="text-sm">© {{ date('Y') }} Luan Erazo. {{ __('messages.footer.all_rights_reserved') }}</p>
     </section>
     <section class="w-10/12 mx-auto">
         <p class="text-xs p-2 mx-auto text-justify">
-            We use Microsoft Clarity and Google Analytics to analyze how you interact with our website, helping us
-            improve user interactions and experiment with tools in a safe environment. By using our site, you agree that
-            we, Microsoft, and Google can collect and use this data. Our privacy policy [link to your privacy policy]
-            has more details.
+            {{ __('messages.footer.privacy_text') }}
         </p>
     </section>
     {{-- 
