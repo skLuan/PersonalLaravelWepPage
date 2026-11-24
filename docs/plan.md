@@ -27,7 +27,7 @@ The site has open write endpoints and won't boot in a production container. Fix 
 - [ ] **Skills section**: fill the empty `#Skills` section from the `skills` table.
 - [ ] **"Let's work" / contact section**: fill `#letsWork` with a contact form (rate-limited, with a honeypot) or a mailto/Calendly link.
 - [ ] **Hero section**: the `#hero` section is empty, so decide what goes there or remove it.
-- [ ] **Blog localization** (#8): merge `develop/multilang` (2 commits: `BlogPost`/`BlogCategories` models, localized blog routes). Then the language switcher works on `/blog`.
+- [~] **Blog localization** (#8): merge `develop/multilang` (2 commits: `BlogPost`/`BlogCategories` models, localized blog routes). Then the language switcher works on `/blog`.
 - [ ] **Language switcher everywhere**: show it in the mobile menu too (today it is desktop-only), and keep the current path when switching.
 - [ ] **Translate the remaining UI**: project CRUD views (currently hard-coded Spanish), blog chrome and privacy policy.
 - [ ] **Real social links** (#24): replace the placeholders in the navbar and footer JSON-LD with config values.

@@ -29,6 +29,31 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-23: Resolve `develop/multilang` merge conflict in routes
+
+**Branch:** `develop/blog` · **Goal:** resolve the `routes/web.php` conflict from merging `develop/multilang`.
+
+### Done
+- Resolved all conflict hunks in `routes/web.php` and staged it. The merge commit is not made yet.
+- Kept multilang's structure: manual blog routes inside `{locale}`, plus the unprefixed fallback group (`*.fallback` names, `/blog_admin`). This is required because multilang sets `include_default_routes => false` and `BlogPost`/`BlogCategories` build URLs from the `.fallback` names.
+- Kept HEAD's `App` and `HomeController` imports, and used `HomeController::class` in both groups.
+- Dropped HEAD's unprefixed `/` and `/portfolio` routes. The fallback group serves the same URLs, and no view calls `route('home')` or `route('portfolio')` without a locale (checked with grep).
+
+### ✅ Works (verified)
+- `php -l routes/web.php` passes, and no conflict markers are left.
+- `php artisan route:list` shows 98 routes. It includes the 6 public blog routes under `/{locale}/blog` and 6 under `/blog`, the 20 `binshopsblog.admin.*` routes, and `portfolio.fallback` / `home.fallback`.
+
+### ❌ Broken / not working
+- `home.fallback` is the name of both `/` and `/home`, and `home` is the name of both `{locale}` and `{locale}/home`. This was already the case on both branches, and `route:cache` was already failing (#3, #4).
+
+### ❔ Not verified
+- I did not test any page in a browser. The blog index, single post, category links and language switcher on `/blog` all still need checking.
+
+### Next
+- Commit the merge, then check `/blog`, `/es/blog` and the language switcher in a browser. If they work, tick "Blog localization" in `docs/plan.md`.
+
+---
+
 ## 2026-11-23: Full project read-through and documentation
 
 **Branch:** `develop/blog` · **Goal:** read the whole project and its git history, then write the project docs.
