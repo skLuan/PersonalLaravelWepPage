@@ -1,0 +1,92 @@
+# Luan Erazo personal site · local development environment
+#
+#   docker compose up -d                 → app   http://localhost:8080
+#                                          vite  http://localhost:5174 (assets + HMR)
+#                                          mail  http://localhost:8026 (Mailpit)
+#                                          db    localhost:3308 (MariaDB, user/pass luane/luane)
+#   docker compose exec app php artisan …
+#   docker compose exec app composer …
+#   docker compose run --rm node npm run build
+#
+# Ports are offset from thelamb.studio-web (8000/5173/3307/8025) so both
+# stacks can run at the same time.
+#
+# vendor/ and node_modules/ live in named volumes, not in the bind mount:
+# on Windows every stat() across C:\ is slow, and node_modules needs Linux
+# binaries. Run composer/npm INSIDE the containers.
+#
+# App configuration lives only in `.env` (with container hosts: DB_HOST=db,
+# MAIL_HOST=mailpit). No DB_/APP_ variables are exported here: a real env var
+# beats phpunit.xml's <env>, and tests would run against the dev database.
+
+name: luane
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    image: luane-app:dev
+    container_name: luane-app
+    working_dir: /var/www
+    # On a fresh clone the vendor volume is empty: install on first start only.
+    command: sh -c "[ -f vendor/autoload.php ] || composer install --no-interaction --no-progress; php artisan serve --host=0.0.0.0 --port=8000"
+    ports:
+      - "8080:8000"
+    volumes:
+      - .:/var/www
+      - vendor:/var/www/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Vite + Tailwind. In a container so node_modules has Linux binaries and
+  # Tailwind can read vendor/ views from the shared volume.
+  node:
+    image: node:22-bookworm-slim
+    container_name: luane-node
+    working_dir: /var/www
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    environment:
+      VITE_IN_DOCKER: "1"
+    ports:
+      - "5174:5174"
+    volumes:
+      - .:/var/www
+      - vendor:/var/www/vendor:ro
+      - node_modules:/var/www/node_modules
+    restart: unless-stopped
+
+  # Hostinger runs MariaDB, so develop against MariaDB, not MySQL.
+  db:
+    image: mariadb:11.4
+    container_name: luane-db
+    environment:
+      MARIADB_DATABASE: luane
+      MARIADB_USER: luane
+      MARIADB_PASSWORD: luane
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3308:3306"
+    volumes:
+      - db:/var/lib/mysql
+      - ./docker/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: luane-mailpit
+    ports:
+      - "8026:8025"
+    restart: unless-stopped
+
+volumes:
+  vendor:
+  node_modules:
+  db:
