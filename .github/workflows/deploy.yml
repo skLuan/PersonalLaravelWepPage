@@ -101,6 +101,10 @@ jobs:
             [ -f artisan ] || { echo 'artisan not found in DEPLOY_PATH'; exit 1; }
             [ -L public_html ] && [ \"\$(readlink public_html)\" = public ] \
               || { echo 'public_html is not a symlink to public. Run scripts/hostinger/migrate-layout.sh --apply first'; exit 1; }
+            if [ -e public/storage ] || [ -L public/storage ]; then
+              [ -L public/storage ] && [ \"\$(readlink -f public/storage)\" = \"\$(readlink -f storage/app/public)\" ] \
+                || { echo 'public/storage must be a symlink to storage/app/public (it exposes more than that). Fix: rm -rf public/storage && ln -s ../storage/app/public public/storage'; exit 1; }
+            fi
             echo \"layout ok: \$PWD (public_html -> public)\""
 
       - name: Maintenance mode on
@@ -143,7 +147,8 @@ jobs:
             $REMOTE_PHP artisan config:cache
             $REMOTE_PHP artisan view:cache
             # route:cache is skipped on purpose: duplicate auth route names (journal #3)
-            [ -e public/storage ] || $REMOTE_PHP artisan storage:link || true"
+            # Hostinger disables PHP symlink(), so storage:link is done with ln.
+            [ -e public/storage ] || ln -s ../storage/app/public public/storage"
 
       - name: Maintenance mode off
         if: always()
@@ -156,7 +161,7 @@ jobs:
           [ "$code" = "200" ]
           # Nothing outside public/ may be reachable from the web.
           leak=0
-          for p in /.env /artisan /composer.json /composer.lock /public/index.php /vendor/autoload.php /storage/logs/laravel.log; do
+          for p in /.env /artisan /composer.json /composer.lock /public/index.php /vendor/autoload.php /storage/logs/laravel.log /storage/framework/sessions/; do
             c=$(curl -s -o /dev/null -w '%{http_code}' "https://luane.online$p")
             echo "$p -> $c"
             [ "$c" = "200" ] && { echo "::error::$p is publicly reachable"; leak=1; }

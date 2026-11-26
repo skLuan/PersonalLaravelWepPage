@@ -122,7 +122,7 @@ Until 2026-11 the whole app sat inside `public_html/` behind a redirect `.htacce
 1. Installs Composer deps with `--no-dev --optimize-autoloader` and runs `npm ci && npm run build` on the runner (the server does not need Node).
 2. Connects over SSH, runs `php artisan down`.
 3. `rsync --delete` the build to `HOSTINGER_DEPLOY_PATH`. It never deletes top-level entries that are not in the repo (`public_html`, backups, Hostinger files) and **never touches** `.env`, `storage/`, `bootstrap/cache/*.php`, `public/storage`, `public/imgs/`, `public/blog_images/`, any `.htaccess`, `error_log`, `.well-known/`, and it never deletes `*.png/*.jpg/*.jpeg/*.webp` on the server (they are gitignored).
-4. `migrate --force`, `optimize:clear`, `config:cache`, `view:cache`, `storage:link` if missing. `route:cache` is skipped until journal #3 is fixed.
+4. `migrate --force`, `optimize:clear`, `config:cache`, `view:cache`, and `ln -s ../storage/app/public public/storage` if missing (Hostinger disables PHP `symlink()`, so `artisan storage:link` fails there). The layout check also fails if `public/storage` points anywhere else. `route:cache` is skipped until journal #3 is fixed.
 5. `php artisan up` (always, even if a step failed), then checks that `https://luane.online/` returns 200 and that `/.env`, `/artisan`, `/composer.json`, `/public/index.php`, `/vendor/…` and `/storage/logs/…` do **not**.
 
 **GitHub configuration** (*Settings → Secrets and variables → Actions*):

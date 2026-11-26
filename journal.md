@@ -48,6 +48,7 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ### ❌ Broken / not working
 - `route:cache` still fails (#3), so the workflow skips it.
+- 2026-11-26, after the manual migration: `https://luane.online/storage/logs/laravel.log` answered 200 (it showed the server path). `artisan storage:link` fails on Hostinger (`Call to undefined function Illuminate\Filesystem\symlink()`), and `public/storage` ended up exposing the whole `storage/` folder. Fix: `ln -s ../storage/app/public public/storage`. Scripts and workflow now use `ln` and the layout check rejects a wrong `public/storage`.
 
 ### ❔ Not verified
 - The migration has not run on the real server. Hostinger is expected to follow the `public_html` symlink (common setup), but this is not verified.

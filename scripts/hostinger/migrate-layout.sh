@@ -78,8 +78,10 @@ ls -la "$DOMAIN_DIR" | grep public
 
 say "5. Storage link and caches"
 # The old link (if any) used an absolute path into public_html/storage.
+# Hostinger disables PHP symlink(), so `artisan storage:link` fails: use ln.
 [ -L public/storage ] && rm public/storage
-"$PHP_BIN" artisan storage:link || true
+[ -e public/storage ] && mv public/storage "$BACKUP_DIR/public-storage-$STAMP"
+ln -s ../storage/app/public public/storage
 "$PHP_BIN" artisan optimize:clear     # cached config holds the old absolute paths
 "$PHP_BIN" artisan config:cache
 "$PHP_BIN" artisan view:cache
