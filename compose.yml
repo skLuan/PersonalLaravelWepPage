@@ -29,8 +29,12 @@ services:
     image: luane-app:dev
     container_name: luane-app
     working_dir: /var/www
-    # On a fresh clone the vendor volume is empty: install on first start only.
-    command: sh -c "[ -f vendor/autoload.php ] || composer install --no-interaction --no-progress; php artisan serve --host=0.0.0.0 --port=8000"
+    # Every start: sync the vendor volume with composer.lock (a no-op when nothing
+    # changed; post-autoload-dump also publishes Filament's gitignored assets),
+    # run pending migrations, then serve. After a pull that changes packages or
+    # migrations: `docker compose restart app`. After a Dockerfile change (PHP
+    # version): `docker compose up -d --build app`.
+    command: sh -c "git config --global --add safe.directory /var/www && composer install --no-interaction --no-progress && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
     ports:
       - "8080:8000"
     volumes:

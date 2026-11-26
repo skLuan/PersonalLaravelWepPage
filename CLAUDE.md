@@ -28,7 +28,9 @@ See [docs/architecture.md](docs/architecture.md) for the full map.
 The local environment is Docker (`compose.yml`): app at http://localhost:8080, Vite at :5174, MariaDB at :3308 (`luane`/`luane`), Mailpit at :8026.
 
 ```bash
-docker compose up -d                                   # start everything (first run installs vendor + node_modules into volumes)
+docker compose up -d                                   # start everything; app runs composer install + migrate on every start
+docker compose restart app                             # after pulling new packages/migrations (e.g. a 500 "Class … not found")
+docker compose up -d --build app                       # after a Dockerfile change (PHP version)
 docker compose exec app php artisan migrate --seed     # seeds the skills table only
 docker compose exec app php artisan test               # uses the `testing` DB (docker/db/init)
 docker compose exec app php artisan route:list --except-vendor

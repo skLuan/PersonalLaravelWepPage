@@ -6,7 +6,9 @@ Everything runs in containers: PHP 8.4 (the same as the Hostinger target; hPanel
 
 ```bash
 cp .env.example .env               # already set to the container hosts (DB_HOST=db, MAIL_HOST=mailpit)
-docker compose up -d               # first run: builds the image, composer install + npm install into volumes
+docker compose up -d               # builds the image; each start runs composer install + migrate (app) and npm install (node)
+docker compose restart app         # after a pull that changes composer.lock or adds migrations
+docker compose up -d --build app   # after a Dockerfile change (e.g. the PHP version)
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate --seed
 ```
