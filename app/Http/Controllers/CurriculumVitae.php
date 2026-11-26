@@ -15,10 +15,10 @@ class CurriculumVitae extends Controller
     protected $blockIds;
     // ----------------------------------------------------------- Constructor
     public function __construct(NotionService $notionService) {
-        $this->notionInstance = new Notion(env('NOTION_API_TOKEN'));
+        $this->notionInstance = new Notion(config('services.notion.token'));
         $this->internalNotion = $notionService;
         $this->blockIds = [
-            'mainPage' => env('NOTION_CURRICULUM_VITAE_ID'),
+            'mainPage' => config('services.notion.curriculum_vitae_id'),
             'principal' => 'be694f82-eff2-4dac-80aa-537a518712f2', // Este es blocke interno principal, contiene los dos columnas
             'experienciaLaboral' => '35fe5f49-98a1-4404-878c-e4d4751c8ab4', // Este es de la data base de los trabajos que he hecho
             //'journal' => '275288a9-dff7-40d6-b1cf-53450717dc26',

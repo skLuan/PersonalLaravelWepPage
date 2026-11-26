@@ -65,7 +65,8 @@ php artisan route:list --except-vendor
 
 - `php artisan route:cache` **fails**: `password.request` and other route names are defined twice, because both Breeze (`routes/auth.php`) and laravel/ui (`Auth::routes()`) are registered. The production Docker entrypoint runs `route:cache`, so it will crash.
 - `/projects` CRUD and `/register` are **public** (no auth middleware).
-- `env()` is called directly in Blade views and controllers (`GOOGLE_TAG_ID`, `NOTION_*`). After `config:cache` these return `null`. Read them through `config()` instead.
+- Never call `env()` outside `config/`. Production runs `config:cache`, so `env()` returns `null` there. `GOOGLE_TAG_ID` and `NOTION_*` are read via `config('services.google.tag_id')` / `config('services.notion.*')`.
+- **Deploy:** every push to `main` deploys to Hostinger (`.github/workflows/deploy.yml`). See `docs/development.md` → Deployment.
 - Root `lang/` is ignored, because Laravel 10 prefers `resources/lang/` when it exists.
 - `darkMode_button.js` runs on every page but the toggle only exists on single blog posts. Every other page throws a `TypeError` and never reaches `Alpine.start()`.
 - `.gitignore` excludes `*.png` and `*.jpg`, so `public/imgs/*` (profile photo, hero) is not in git.
