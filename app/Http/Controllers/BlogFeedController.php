@@ -2,34 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use BinshopsBlog\Models\BinshopsBlogPost;
-use Carbon\Carbon;
+use App\Models\Post;
 use Illuminate\Http\Response;
 
-/**
- * RSS 2.0 feed for the blog.
- *
- * Replaces binshops' BinshopsBlogRssFeedController, which needs the abandoned
- * laravelium/feed package.
- */
+/** RSS 2.0 feed of the current locale's posts. */
 class BlogFeedController extends Controller
 {
+    public const POSTS = 20;
+
     public function __invoke(): Response
     {
-        $posts = BinshopsBlogPost::query()
-            ->where('is_published', true)
-            ->where('posted_at', '<', Carbon::now())
-            ->orderByDesc('posted_at')
-            ->limit(config('binshopsblog.rssfeed.posts_to_show_in_rss_feed', 10))
+        $posts = Post::query()
+            ->locale()
+            ->published()
+            ->latest('published_at')
+            ->limit(self::POSTS)
             ->get();
 
         return response()
             ->view('feed.rss', [
                 'posts' => $posts,
-                'title' => config('app.name').' Blog',
-                'description' => config('binshopsblog.rssfeed.description', 'Blog RSS feed'),
+                'title' => __('blog.feed.title'),
+                'description' => __('blog.feed.description'),
                 'language' => app()->getLocale(),
-                'textLimit' => config('binshopsblog.rssfeed.text_limit', 100),
             ])
             ->header('Content-Type', 'application/rss+xml; charset=UTF-8');
     }

@@ -3,12 +3,14 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -41,34 +43,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_admin' => 'boolean',
     ];
 
-     /**
-     * Enter your own logic (e.g. if ($this->id === 1) to
-     *   enable this user to be able to add/edit blog posts
-     *
-     * @return bool - true = they can edit / manage blog posts,
-     *        false = they have no access to the blog admin panel
-     */
-    public function canManageBinshopsBlogPosts()
+    /** Only admins open the Filament panel (/admin). Set with `user:create --admin`. */
+    public function canAccessPanel(Panel $panel): bool
     {
-        // Enter the logic needed for your app.
-        // Maybe you can just hardcode in a user id that you
-        //   know is always an admin ID?
-
-        if (       $this->id === 1
-             && $this->email === "erazo.luan@gmail.com"
-           ){
-
-           // return true so this user CAN edit/post/delete
-           // blog posts (and post any HTML/JS)
-
-           return true;
-        }
-
-        // otherwise return false, so they have no access
-        // to the admin panel (but can still view posts)
-
-        return false;
+        return (bool) $this->is_admin; // null on a fresh model before refresh()
     }
 }

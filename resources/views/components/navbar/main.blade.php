@@ -36,7 +36,7 @@
                         href="/" aria-current="page">{{ __('messages.nav.home') }}</a>
                 </li>
                 <li class="p-1">
-                    <a class="block text-lg no-underline font-bold {{ request()->routeIs('binshopsblog.index') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+                    <a class="block text-lg no-underline font-bold {{ request()->routeIs('blog.*') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
                         href="/blog">{{ __('messages.nav.blog') }}</a>
                 </li>
                 <li class="p-1">
@@ -116,7 +116,7 @@
         <ul class="hidden lg:flex justify-center items-center gap-4 p-2">
             <li class="p-1">
                 <a class="block font-skl-titles
-              text-lg no-underline font-bold {{ request()->routeIs('binshopsblog.index') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
+              text-lg no-underline font-bold {{ request()->routeIs('blog.*') ? 'active' : '' }} text-skl-pink hover:text-skl-purple transition-all"
                     href="{{ url('/blog') }}">{{ __('messages.nav.blog') }}</a>
             </li>
             <li class="p-1">

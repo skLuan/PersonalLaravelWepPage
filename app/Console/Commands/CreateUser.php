@@ -9,14 +9,15 @@ use Illuminate\Validation\Rules\Password;
 
 /**
  * Public registration is closed; this is the only way to add a user.
- * Note: blog admin access also needs User::canManageBinshopsBlogPosts().
+ * --admin lets the user open the Filament panel (/admin).
  */
 class CreateUser extends Command
 {
     protected $signature = 'user:create
                             {email : Login email}
                             {--name= : Display name (defaults to the part before @)}
-                            {--password= : Password (asked interactively if omitted)}';
+                            {--password= : Password (asked interactively if omitted)}
+                            {--admin : Can open the admin panel}';
 
     protected $description = 'Create a user that can log in (registration is closed)';
 
@@ -48,9 +49,10 @@ class CreateUser extends Command
             'email' => $email,
             'password' => $password, // hashed by the model cast
         ]);
+        $user->forceFill(['is_admin' => (bool) $this->option('admin')])->save();
         $user->markEmailAsVerified();
 
-        $this->info("User #{$user->id} <{$user->email}> created.");
+        $this->info("User #{$user->id} <{$user->email}> created".($user->is_admin ? ' (admin)' : '').'.');
 
         return self::SUCCESS;
     }

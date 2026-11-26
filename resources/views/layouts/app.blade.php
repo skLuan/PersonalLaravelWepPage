@@ -32,7 +32,7 @@
         rel="stylesheet">
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @if (request()->routeIs('portfolio*') || request()->routeIs('binshopsblog*'))
+    @if (request()->routeIs('portfolio*') || request()->routeIs('blog.*'))
         @vite(['resources/js/3dMain.js'])
     @endif
     <!-- Google tag (gtag.js) -->

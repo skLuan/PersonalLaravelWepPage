@@ -2,7 +2,7 @@
 
 ## Option A: Docker (recommended)
 
-Everything runs in containers: PHP 8.3 (the same as the Hostinger target), Vite, MariaDB 11.4 and Mailpit. You need Docker Desktop and nothing else.
+Everything runs in containers: PHP 8.4 (the same as the Hostinger target; hPanel allows up to 8.5), Vite, MariaDB 11.4 and Mailpit. You need Docker Desktop and nothing else.
 
 ```bash
 cp .env.example .env               # already set to the container hosts (DB_HOST=db, MAIL_HOST=mailpit)
@@ -39,7 +39,7 @@ Notes:
 
 ### Prerequisites
 
-- PHP **8.1+** with `pdo_mysql`, `mbstring`, `gd` (blog image resizing), `curl`
+- PHP **8.2+** (8.4 recommended) with `pdo_mysql`, `mbstring`, `intl` (Filament), `gd`, `zip`, `curl`
 - Composer 2
 - Node.js 18+ (verified with Node 22) and npm
 - MySQL 8 or MariaDB
@@ -79,7 +79,7 @@ Then:
 
 ```bash
 php artisan migrate --seed     # creates app + blog tables, seeds 4 skills
-php artisan storage:link       # blog image uploads
+php artisan db:seed --class=LocalAdminSeeder   # admin user for /admin (local only)
 ```
 
 > **Images:** `.gitignore` excludes `*.png`/`*.jpg`, so `public/imgs/` (profile photo, hero) is not in the repo. Copy those files over by hand until this is fixed (see [plan.md](plan.md), Phase 0).
@@ -97,23 +97,29 @@ php artisan serve --port=8080    # app on http://localhost:8080
 |---|---|
 | Home | `/`, `/es` |
 | Portfolio | `/portfolio`, `/es/portfolio` |
-| Blog | `/blog` |
-| Blog admin | `/blog_admin` (logged-in user who passes `canManageBinshopsBlogPosts()`) |
-| Project CRUD | `/projects` (login required) |
-| Login | `/login`. There is no `/register`; create a user with `php artisan user:create you@example.com` (asks for the password) |
+| Blog | `/en/blog`, `/es/blog` (`/blog` redirects by browser language) |
+| Admin (Filament) | `/admin`: posts, categories, projects, skills. Needs `is_admin`: `php artisan user:create you@example.com --admin` |
+| Login | `/admin/login` for the panel, `/login` (Breeze) for the rest. There is no `/register` |
 | Privacy | `/privacy-policy` |
 
 ## Common tasks
 
 **Add a UI string:** add the key to both `resources/lang/en/<file>.php` and `resources/lang/es/<file>.php`, then use `{{ __('<file>.<key>') }}`. Don't use the root `lang/` folder, because Laravel ignores it here.
 
-**Add a portfolio project:** go to `/projects/create`. `image_path` must be a full URL. Pick at least one skill. To add new skills, insert rows into `skills` (or extend `DatabaseSeeder`).
+**Add a portfolio project:** `/admin/projects` → *New project*. `image_path` must be a full URL. Skills can be created from the skills field.
 
-**Add a blog post:** use `/blog_admin` → *Add post*.
+**Add a blog post:** `/admin/posts` → *New post*. Pick the language; for a translation, create a second post in the other language and set *Translation of*. Empty *Publish at* = draft; admins can preview drafts at their URL.
+
+**Import the old binshops blog** (once, where the `binshops_blog_*` tables have data):
+```bash
+php artisan blog:import-binshops --dry-run          # shows each post with its guessed language
+php artisan blog:import-binshops --set=7:en --pair=3:7
+```
+Then check `/admin/posts`, rename the categories created for the second language, and link any missing translations.
 
 **Add a page with the 3D background:**
 1. Render `<x-three-canvas />` at the top of the section.
-2. Make the route name match `portfolio*` or `binshopsblog*`, or extend the `@if` in `layouts/app.blade.php` that includes `3dMain.js`.
+2. Make the route name match `portfolio*` or `blog.*`, or extend the `@if` in `layouts/app.blade.php` that includes `3dMain.js`.
 3. If the page needs its own scene, add a branch in `resources/js/3dMain.js`.
 
 **Add something animated to a world:** give the object a `tick(delta)` method and push it to `loop.updatables`.
@@ -125,7 +131,7 @@ docker compose exec app php artisan test     # Docker: the `testing` DB is creat
 php artisan test                             # native: create a `testing` database yourself
 ```
 
-`phpunit.xml` uses `DB_DATABASE=testing` on the `.env` connection. Besides the Breeze auth/profile tests, `tests/Feature/BlogLocaleTest.php` covers the blog in every locale (index, post, category, search, RSS, language switcher) and `tests/Feature/AccessControlTest.php` covers closed registration, `/projects` auth, unique route names and `user:create`. Status on 2026-11-25: **40 passed**.
+`phpunit.xml` uses `DB_DATABASE=testing` on the `.env` connection (a real `DB_DATABASE` env var wins, e.g. `DB_DATABASE=testing_fil php artisan test` for a worktree). Besides the Breeze auth/profile tests: `BlogLocaleTest` (blog per locale, redirects, drafts, search, pagination, RSS, language switcher), `AdminPanelTest` (panel access and pages), `ImportBinshopsBlogTest` (import command) and `AccessControlTest` (closed registration, unique route names, `user:create`). Status on 2026-11-26: **63 passed**.
 
 Two checkouts running tests at the same time (for example a git worktree plus the main stack) share the `testing` database, and `RefreshDatabase` in one will break the other. Run them one at a time.
 

@@ -15,7 +15,7 @@ Live site: <https://luane.online>
 ## Features
 
 - **Portfolio:** projects and skills stored in MySQL (`projects`, `skills`, `project_skill`), shown as cards.
-- **Blog:** built on [`binshops/laravel-blog`](https://github.com/binshops/laravel-blog), with an admin panel, categories, search, RSS and a reading progress bar.
+- **Blog:** English and Spanish posts (one URL per language), categories, search and RSS, written in a [Filament](https://filamentphp.com) admin panel at `/admin`.
 - **3D background:** separate scenes for the portfolio and the blog, with steering agents (wander, path following, separation, cohesion) and a camera that follows the scroll.
 - **English / Spanish:** `/{locale}/…` routes, detection from session and browser, and a language switcher.
 - **Dark mode:** class-based Tailwind theme, saved in `localStorage`, and it follows the system setting by default.
@@ -27,7 +27,7 @@ Requirements: Docker Desktop.
 
 ```bash
 cp .env.example .env
-docker compose up -d                                  # PHP 8.3 · Vite · MariaDB 11.4 · Mailpit
+docker compose up -d                                  # PHP 8.4 · Vite · MariaDB 11.4 · Mailpit
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate --seed
 ```
@@ -40,8 +40,8 @@ Open <http://localhost:8080>. Outgoing mail lands in Mailpit at <http://localhos
 
 | Layer | Tools |
 |---|---|
-| Backend | Laravel 10, MySQL, Breeze auth, Sanctum, `spatie/laravel-sluggable` |
-| Blog | `binshops/laravel-blog` |
+| Backend | Laravel 12, MariaDB, Breeze auth, Sanctum, `spatie/laravel-sluggable` |
+| Admin / blog | Filament 5 (Livewire 4), own `Post` / `Category` models |
 | Frontend | Blade, Tailwind CSS 3, Alpine.js, iconify-icon, Vite 5 |
 | 3D / AI | Three.js 0.167, Yuka 0.7.8 |
 | Legacy | Notion API (`fiveam-code/laravel-notion-api`), no longer routed |
@@ -52,7 +52,7 @@ Open <http://localhost:8080>. Outgoing mail lands in Mailpit at <http://localhos
 app/Http/Controllers/     Portfolio, Project (CRUD), Home, CurriculumVitae (legacy Notion)
 app/Http/Middleware/      SetLocale
 app/Models/               Project, Skill, User
-resources/views/          layouts/app, home, portfolio, privacy-policy, components/, vendor/binshopsblog/
+resources/views/          layouts/app, home, portfolio, privacy-policy, components/, blog/
 resources/lang/{en,es}/   translation strings
 resources/js/             app.js (UI), 3dMain.js (3D entry), World/ (scenes, components, systems)
 routes/web.php            public + localized routes

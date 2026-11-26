@@ -29,6 +29,66 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-26: Laravel 12 + Filament 5, own blog models, binshops removed
+
+**Branch:** `claude/blog-filament-seo-migration-6c5c1d` (worktree `.claude/worktrees/blog-filament-seo-migration-6c5c1d`, with `fix/blog-locale-auth` merged in at `1b99869`) · **Goal:** phases B, C and D of [docs/design-blog-filament-seo.md](docs/design-blog-filament-seo.md), so the SEO work can start.
+
+### Done
+- Merged `fix/blog-locale-auth` (security and locale fixes) into this branch. It was a real merge, because `main` has 2 PR merge commits that the fix branch lacks. There were no conflicts.
+- **PHP 8.4** dev image (`docker/app/Dockerfile`). **Laravel 10.48 → 12.74**, Sanctum 4.5, PHPUnit 11.5, Collision 8.9, Breeze 2.4, Sail 1.71. `composer` resolved this with no conflicts. Fixed one break: Blade 12 compiles `@context` in the footer JSON-LD as a directive (ParseError), so it is now `@@context`.
+- **Filament 5.12 + Livewire 4.4**: `/admin` panel with skl-pink as the primary color, `users.is_admin` + `User::canAccessPanel()`, `user:create --admin`, `LocalAdminSeeder`. Resources: Post, Category, Project, Skill.
+- **Own blog**: migrations `posts`, `categories`, `category_post` and `seo_meta` (one row per language via `translation_group`). Models `Post`, `Category` and `SeoMeta`, traits `HasTranslations` and `HasSeo`. `blog` disk = `public/blog_images`. `BlogController` and views `resources/views/blog/{index,show,search}` + partials, with one `<h1>` per page, posts as `<article>`, `<time datetime>`, breadcrumb `<nav>`, restored pagination and `hreflang` links to translations. `resources/lang/{en,es}/blog.php`. New RSS feed on `Post`.
+- Routes: `/{locale}/blog/*` → `BlogController`. Unprefixed `/blog/{slug}` and `/blog/category/{slug}` 301 to their own language; `/blog`, `/blog/search` and `/blog/feed` 302 to the visitor's language. `/projects/*` and `/blog_admin/*` 301 to the panel.
+- `php artisan blog:import-binshops`: guesses each post's language, takes `--set`, `--pair`, `--locale` and `--dry-run`, can run again (`legacy_id`), copies `seo_title`/`meta_desc` to `seo_meta`, and creates one category per language.
+- Removed: `binshops/laravel-blog` (and with it intervention/image 2, swisnl/laravel-fulltext, cviebrock sluggable, laravel/helpers), `config/binshopsblog.php`, `config/laravel-fulltext.php`, `resources/views/vendor/binshopsblog`, `public/binshops-*`, `ProjectController` + `resources/views/projects`, and `layouts/projects.blade.php` (#25).
+- Tests: rewrote `BlogLocaleTest` (13) and added `AdminPanelTest` (17) and `ImportBinshopsBlogTest` (4). Updated `AccessControlTest`.
+- Docs: `CLAUDE.md`, `docs/architecture.md`, `docs/development.md`, `docs/plan.md` (Phase 0.5) and `README.md`.
+
+### ✅ Works (verified)
+- `php artisan test` in container `luane-fil-app` (PHP 8.4.28) against DB `testing_fil`: **63 passed** (208 assertions). `route:cache` and `optimize` succeed. `composer` reports no security advisories.
+- `npm run build` succeeds; the 3D chunk is still 630 kB.
+- HTTP on :8091 (built assets, DB `luane_fil` with 2 sample binshops posts imported via `--pair=1:2`): 200 for `/`, `/es`, `/en/blog`, `/es/blog`, both posts, search, feed, `/en/portfolio` and `/admin/login`. `/blog` → 302 `/es/blog` (with `Accept-Language: es`). `/blog/existir-como-humano` → 301. `/projects` and `/blog_admin` → 301 to the panel. `/admin` → login.
+- In the built-in browser: the Spanish post page renders (breadcrumb, h1, Spanish date, body h2), the blog index renders with the 3D canvas, admin login works, the posts table shows locale, linked translation and category, and the post edit form loads the imported SEO description. **Saving the form updated `seo_meta` through the relationship.**
+- The import's language guess was right for both sample posts (es and en).
+
+### ❌ Broken / not working
+- The English category created by the import is named "Reflexiones": binshops categories have a single name. Rename it in the admin after importing.
+- The reading progress bar never worked (the layout never loaded `binshops-blog.js`). It was dropped; added to the plan.
+- Imported posts keep only binshops' *large* image as the cover. The medium and thumbnail files are not used, so there is no `srcset` yet.
+
+### ❔ Not verified
+- The import against **real** data: the dev DB had 0 posts. The real posts are in production (Hostinger) or the old local MySQL (`.env.backup`).
+- Rich-editor image attachments (upload into `blog_images/content`) and cover upload in the browser. Only a text field was saved.
+- Hostinger: PHP 8.4 availability (Luan says up to 8.5), and whether `composer install` there runs `filament:upgrade` correctly.
+- Dark mode and mobile layout of the new blog views. The admin panel on mobile.
+- The JS errors from #16 (`darkMode_button.js`) were not rechecked.
+
+### Next
+- Review, then merge this branch (it includes `fix/blog-locale-auth`).
+- Phase 0.5-A: `SeoData` + `<x-seo>`, semantic home/portfolio, `/` redirect by language, sitemap, robots, `llms.txt`.
+- After deploying: run `blog:import-binshops` in production (plan item D2).
+- Clean up: `docker rm -f luane-fil-app`, plus the `luane_fil_vendor` and `luane_fil_node_modules` volumes and the `luane_fil`/`testing_fil` DBs when this worktree is done.
+
+---
+
+## 2026-11-25: Design: Filament vs binshops, SEO tool, semantic HTML
+
+**Branch:** `claude/blog-filament-seo-migration-6c5c1d` · **Goal:** decide whether to move the blog to Filament, and plan the SEO/AI-visibility and HTML-structure fixes.
+
+### Done
+- Wrote [docs/design-blog-filament-seo.md](docs/design-blog-filament-seo.md). The recommendation is own blog models + a Filament admin, after a Laravel upgrade; SEO and semantic fixes come next.
+
+### ✅ Works (verified)
+- Packagist (2026-11-25): binshops v10.0.0 (2025-04-16) is the latest; Filament 5.12.0 requires PHP ^8.2.
+
+### ❌ Broken / not working (from reading the views)
+- No `<h1>` on home, portfolio or blog index. Blog pagination was commented out (only 10 posts linked). The post body was wrapped in `<p>`. `/` vs `/en` serve duplicate content with no canonical. No sitemap. The mobile menu element has `id` twice. (The blog items were fixed on 2026-11-26.)
+
+### ❔ Not verified
+- None beyond what the next entry covers.
+
+---
+
 ## 2026-11-25: Blog localization fixes and auth cleanup
 
 **Branch:** `fix/blog-locale-auth` (from `develop/blog` at `1764524`, git worktree at `../PersonalLaravelWepPage-wt/blog-locale-auth`) · **Goal:** fix #27–#30 and do the Phase 0 auth cleanup (#1–#5, #26).

@@ -9,7 +9,7 @@ The `#n` numbers point to the problem list in the 2026-11-23 entry of [journal.m
 
 The site has open write endpoints and won't boot in a production container. Fix these before adding features.
 
-- [x] **Protect portfolio CRUD** (#1): put `Route::resource('projects', …)` behind `auth` (and ideally an admin gate). *Done when* a guest gets redirected from `/projects/create`, and a `POST /projects` from a guest is rejected. Done 2026-11-25 with `auth` only; with registration closed, every user is an admin. There is no separate admin gate.
+- [x] **Protect portfolio CRUD** (#1): replaced on 2026-11-26 by the Filament panel, gated by `users.is_admin`; `/projects/*` now redirects to `/admin/projects`. Earlier: put `Route::resource('projects', …)` behind `auth` (and ideally an admin gate). *Done when* a guest gets redirected from `/projects/create`, and a `POST /projects` from a guest is rejected. Done 2026-11-25 with `auth` only; with registration closed, every user is an admin. There is no separate admin gate.
 - [x] **Close registration** (#2): `/register` removed (404). Users come from `php artisan user:create`. Done 2026-11-25.
 - [x] **One auth stack** (#3): keep Breeze (`routes/auth.php`) and remove `Auth::routes()` and the laravel/ui controllers and views. *Done when* `php artisan route:cache` succeeds. Done 2026-11-25: `composer remove laravel/ui`, Breeze login view restored; `route:cache` and `optimize` succeed.
 - [x] **Unique route names** (#4): dropped the plain duplicates (`/privacy-policy`, `/home` → redirects). Covered by a test. Done 2026-11-25.
@@ -19,9 +19,9 @@ The site has open write endpoints and won't boot in a production container. Fix 
 - [ ] **Track images** (#13): narrow the `*.png`/`*.jpg` ignore rule so `public/imgs` and the mesh textures get committed (or move them to storage or a CDN).
 - [ ] **CI on `main`** (#15): handled by the new `tests.yml` in Phase 0b.
 - [x] **Fix the 2 failing auth tests**: login and registration redirect to `/home` (laravel/ui) instead of `/dashboard` (Breeze), and `/home` isn't a route. Done 2026-11-25: login passes; the registration test was replaced by "registration is closed".
-- [ ] **Dependency advisories**: `composer` reported "61 security vulnerability advisories affecting 16 packages" (2026-11-25). Run `composer audit`, then update what can be updated within Laravel 10.
+- [x] **Dependency advisories**: done 2026-11-26 by the Laravel 12 upgrade; `composer` now reports "No security vulnerability advisories found".
 - [ ] **`/dashboard` and `/profile` layout**: `<x-app-layout>` renders the site layout, which has `@yield('content')` but no `$slot`, so the Breeze content probably doesn't show. Either give them their own layout or redirect after login to `/projects` (`RouteServiceProvider::HOME`).
-- [ ] Remove dead pieces: the `/inWork` route and view (#7), `layouts/projects.blade.php` (#25), and the root `lang/` folder (#12) once its files are moved to `resources/lang/en`.
+- [ ] Remove dead pieces: the `/inWork` route and view (#7) and the root `lang/` folder (#12) once its files are moved to `resources/lang/en`. (`layouts/projects.blade.php` #25 was removed 2026-11-26.)
 - [x] **Local Docker environment**: `compose.yml` with app (PHP 8.3), node (Vite), MariaDB 11.4 and Mailpit, the same pattern as thelamb.studio-web. *Done when* `docker compose up -d` serves `http://localhost:8080` and `php artisan test` runs inside the container. Done 2026-11-23; see journal.
 
 ### Phase 0b: Deploy with GitHub Actions (Hostinger, modelled on thelamb.studio-web)
@@ -46,12 +46,13 @@ hostinger.yml: composer install --no-dev · npm ci && npm run build · rsync cod
 - [ ] Track images (#13). The deploy uploads from a git checkout, so untracked `public/imgs/*` and mesh textures would be missing on the server.
 
 **Workflows** (copy from the reference and adapt):
-- [ ] `tests.yml`: triggers on `pull_request` + `workflow_call`; PHP 8.3, `composer install`, `npm ci && npm run build`, optional `pint --test`, `php artisan test`. Tests need a database: use a MariaDB service container (the binshops fulltext migration may not run on SQLite), or check whether SQLite works. This replaces the Laravel skeleton workflows (`issues.yml`, `pull-requests.yml`, `update-changelog.yml`) and fixes #15.
+- [ ] `tests.yml`: triggers on `pull_request` + `workflow_call`; PHP 8.4, `composer install`, `npm ci && npm run build`, optional `pint --test`, `php artisan test`. Tests need a database: use a MariaDB service container (the binshops fulltext migration may not run on SQLite), or check whether SQLite works. This replaces the Laravel skeleton workflows (`issues.yml`, `pull-requests.yml`, `update-changelog.yml`) and fixes #15.
 - [ ] `deploy.yml`: push to `main` → staging; tag `v*` → production; `workflow_dispatch` with an environment choice. Every path runs `tests.yml` first.
 - [ ] `hostinger.yml` (reusable, `workflow_call` with `environment`):
   - Validate the environment variables `HOSTINGER_DOCROOT` and `SITE_URL`. They are *variables*, not secrets, or `vars.` reads them as empty.
   - Normalize the SSH key (strip CRLF) and validate it with `ssh-keygen -y` before connecting.
-  - Run `rsync -az --delete`, excluding `.git/`, `.github/`, `node_modules/`, `docker/`, `compose.yml`, `tests/`, `docs/`, `*.md`, `.env`, `storage/`, `public/storage`, `public/hot`, `bootstrap/cache/*.php` **and `public/blog_images/`**. Blog uploads live there (`config/binshopsblog.php` → `blog_upload_dir`), and `--delete` would wipe them. A better long-term fix is to move the uploads under `storage/app/public`.
+  - Filament assets are gitignored: `composer install` regenerates them (`filament:upgrade`), so do not exclude `public/js/filament`, `public/css/filament` or `public/fonts/filament` from rsync.
+  - Run `rsync -az --delete`, excluding `.git/`, `.github/`, `node_modules/`, `docker/`, `compose.yml`, `tests/`, `docs/`, `*.md`, `.env`, `storage/`, `public/storage`, `public/hot`, `bootstrap/cache/*.php` **and `public/blog_images/`**. Blog uploads live there (the `blog` disk in `config/filesystems.php`), and `--delete` would wipe them. A better long-term fix is to move the uploads under `storage/app/public`.
   - Over SSH, run with `set -euo pipefail`:
     - fail if `.env` is missing, `APP_KEY` is empty or `APP_DEBUG=true`;
     - `config:clear` → `down` (with a `trap … up` so the site always comes back) → `migrate --force` → `optimize`;
@@ -86,6 +87,22 @@ hostinger.yml: composer install --no-dev · npm ci && npm run build · rsync cod
 - a failed step leaves the site online (not stuck in maintenance mode);
 - `docs/deployment.md` documents the setup and rollback, like the reference's `docs/despliegue.md`;
 - the unused `laravel-fans/docker` files (`docker/etc`, `docker/usr`, `docker/var`) are removed.
+
+## Phase 0.5: Blog platform, SEO tool, semantic HTML
+
+Design and reasoning: [design-blog-filament-seo.md](design-blog-filament-seo.md). Answers from Luan (2026-11-25): "RAG" = AI readability (yes); Hostinger can run up to PHP 8.5; posts exist in English too; `/` redirects by browser language.
+
+- [x] **B. Upgrade**: PHP 8.4 (dev image), Laravel 10 → 12.74, Sanctum 4, PHPUnit 11, Collision 8. Done 2026-11-26. Blade 12 treats `@context` as a directive (footer JSON-LD now uses `@@context`).
+- [x] **C. Filament panel**: Filament 5.12 (Livewire 4) at `/admin`, `User::canAccessPanel()` = `is_admin`, `user:create --admin`. Project and Skill resources replace the old `/projects` CRUD. Done 2026-11-26.
+- [x] **D. Own blog**: `posts` / `categories` / `category_post` / `seo_meta`, row per locale with `translation_group`; Post and Category resources (rich editor, cover on the `blog` disk, SEO section, *Translation of*); `BlogController` + views under `resources/views/blog/`; unprefixed `/blog/*` redirects; `blog:import-binshops`; binshops, its views/config/assets and `laravel-fulltext` removed. Done 2026-11-26.
+- [ ] **D2. Run the import in production** after deploying: `php artisan blog:import-binshops --dry-run`, fix languages with `--set`, pair translations with `--pair`, run it, then check `/admin/posts`, rename the second-language categories, and create the admin with `user:create --admin`. Then a later migration drops `binshops_blog_*` and `laravel_fulltext`.
+- [ ] **A. SEO + semantics on all pages**: `SeoData` + `<x-seo>` in the layout (title, description, canonical, hreflang, OG, JSON-LD `@graph`), using `seo_meta`; one `<h1>` per page and a real heading outline on home and portfolio (the blog views already have it); `/` and `/portfolio` redirect by browser language; dynamic `robots.txt`; `sitemap.xml`; `llms.txt` and Markdown versions of posts.
+- [ ] **A2. SEO audit tool**: `php artisan seo:audit` + a feature test that fails CI on errors.
+- [ ] **E. Admin SEO tool**: audit page, SEO settings, redirects resource.
+- [ ] **F. (optional)** "Ask my site" chatbot over posts and projects.
+- [ ] Responsive images for covers (`srcset`; binshops' medium/thumbnail files are not imported, only the large one).
+- [ ] Reading progress bar: it never worked (the layout never loaded `binshops-blog.js`) and was dropped. Rebuild it in `app.js` if wanted.
+- [ ] Projects: `image_path` is still a URL; add uploads to the `blog`-style public disk.
 
 ## Phase 1: Finish what's started
 

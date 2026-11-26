@@ -26,21 +26,12 @@ class AccessControlTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'mallory@example.com']);
     }
 
-    public function test_guests_cannot_manage_projects(): void
+    public function test_guests_cannot_create_projects(): void
     {
-        foreach (['/projects', '/projects/create'] as $url) {
-            $this->get($url)->assertRedirect('/login');
-        }
-
-        $this->post('/projects', ['title' => 'Spam'])->assertRedirect('/login');
+        // The old CRUD is gone; /projects only redirects to the admin panel.
+        $this->post('/projects', ['title' => 'Spam'])->assertRedirect('/admin/projects');
+        $this->get('/admin/projects/create')->assertRedirect('/admin/login');
         $this->assertSame(0, Project::count());
-    }
-
-    public function test_logged_in_users_can_open_the_project_admin(): void
-    {
-        $this->actingAs(User::factory()->create())
-            ->get('/projects/create')
-            ->assertOk();
     }
 
     public function test_home_aliases_redirect_to_the_home_page(): void
@@ -74,6 +65,11 @@ class AccessControlTest extends TestCase
         $user = User::where('email', 'admin@example.com')->firstOrFail();
         $this->assertSame('admin', $user->name);
         $this->assertNotNull($user->email_verified_at);
+        $this->assertFalse($user->is_admin);
+
+        $this->artisan('user:create', ['email' => 'boss@example.com', '--password' => 'secret-password', '--admin' => true])
+            ->assertSuccessful();
+        $this->assertTrue(User::where('email', 'boss@example.com')->value('is_admin'));
 
         // Duplicate email is rejected
         $this->artisan('user:create', ['email' => 'admin@example.com', '--password' => 'secret-password'])

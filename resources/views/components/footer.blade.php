@@ -6,7 +6,7 @@
                     href="/" aria-current="{{ request()->routeIs('home') ? 'page' : 'false' }}">Home</a>
             </li>
             <li class="p-1 mx-2">
-                <a class="block text-lg no-underline font-bold text-skl-pink hover:text-skl-purple transition-all {{ request()->routeIs('binshopsblog.index') ? 'active' : '' }}"
+                <a class="block text-lg no-underline font-bold text-skl-pink hover:text-skl-purple transition-all {{ request()->routeIs('blog.*') ? 'active' : '' }}"
                     href="/blog">Blog</a>
             </li>
             <li class="p-1 mx-2">
@@ -71,8 +71,8 @@
         <p class="text-sm">
             {{ __('messages.footer.built_with') }} <a class="p-0" href="https://laravel.com" target="_blank" rel="noopener noreferrer"
                 class="text-skl-pink">Laravel</a> {{ __('messages.footer.and') }}
-            <a class="p-0" href="https://binshops.com/laravel-blog-package" target="_blank" rel="noopener noreferrer"
-                class="text-skl-pink">BinshopsBlog</a>.
+            <a class="p-0" href="https://filamentphp.com" target="_blank" rel="noopener noreferrer"
+                class="text-skl-pink">Filament</a>.
         </p>
         <p class="text-sm">© {{ date('Y') }} Luan Erazo. {{ __('messages.footer.all_rights_reserved') }}</p>
     </section>
@@ -81,21 +81,9 @@
             {{ __('messages.footer.privacy_text') }}
         </p>
     </section>
-    {{-- 
-  @if (\Auth::check() && \Auth::user()->canManageBinshopsBlogPosts())
-    <section class="p-4 text-center" aria-label="Admin controls">
-      <p class="mb-2">You are logged in as a blog admin user.</p>
-      <a href="{{ route('binshopsblog.admin.index') }}"
-         class="inline-block px-4 py-2 text-sm font-semibold border border-skl-pink text-skl-pink hover:bg-skl-pink hover:text-skl-white transition-all"
-         aria-label="Go to Blog Admin Panel">
-        <i class="fa fa-cogs" aria-hidden="true"></i> Go To Blog Admin Panel
-      </a>
-    </section>
-  @endif --}}
-
     <script type="application/ld+json">
   {
-    "@context": "https://schema.org",
+    "@@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Luan Erazo's Personal Site",
     "url": "https://luane.online",

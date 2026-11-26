@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogFeedController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ProjectController;
+use App\Models\Category;
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -12,34 +14,16 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
+| Public pages live under /{locale}. Unprefixed URLs either render with the
+| visitor's preferred locale (home, portfolio, privacy) or redirect to the
+| localized URL (blog). Admin is the Filament panel at /admin.
 */
 
 require __DIR__ . '/auth.php';
-// Route::get('/blog', function() {
-//     return redirect('https://erazoluan.notion.site/Blog-060c7617bd494cbbbd7badfff7afbe35');
-// })->name('blog');
-// Route::get('/blog/inWork', [CurriculumVitae::class, 'showBlog']);
+
 Route::get('/inWork', function () {
     return view('inWork');
 });
-// Route::get('inwork/portfolio', function () {
-//     return view('portfolio');
-// })->name('inWorkPortfolio');
-
-// Route::get('/blog', function () {
-//     return view('blog');
-// })->name('blog');
-// Route::get('/portfolio', function () {
-//     return redirect('https://erazoluan.notion.site/Professional-Life-113cff97a3d780a59e0fdb59a1263a1e');
-// })->name('portfolio');
-
-
-
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -51,7 +35,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// /privacy-policy itself is served by the fallback group below.
 Route::redirect('/privacy', '/privacy-policy');
 Route::redirect('/privacypolicy', '/privacy-policy');
 Route::redirect('/privacypol', '/privacy-policy');
@@ -60,194 +43,95 @@ Route::redirect('/privac', '/privacy-policy');
 Route::redirect('/policy', '/privacy-policy');
 Route::redirect('/pp', '/privacy-policy');
 
-// Portfolio admin. Registration is closed, so every user is an admin.
-Route::resource('projects', ProjectController::class)->middleware('auth');
+// Old admin URLs → Filament panel.
+Route::permanentRedirect('/projects', '/admin/projects');
+Route::get('/projects/{any}', fn () => redirect('/admin/projects', 301))->where('any', '.*');
+Route::permanentRedirect('/blog_admin', '/admin/posts');
+Route::get('/blog_admin/{any}', fn () => redirect('/admin/posts', 301))->where('any', '.*');
 
 $availableLocales = config('app.available_locales', ['en']);
 
-// Localized routes
 Route::prefix('{locale}')
     ->where(['locale' => implode('|', $availableLocales)])
     ->middleware(['setlocale'])
-    ->group(function () use ($availableLocales) {
+    ->group(function () {
+        Route::get('/', function () {
+            return view('home');
+        })->name('home');
 
-    // Home routes
-    Route::get('/', function () {
-        return view('home');
-    })->name('home');
-    Route::get('/home', fn () => redirect()->route('home'));
+        Route::get('/home', fn () => redirect()->route('home'));
 
-    // Portfolio routes
-    Route::resource('portfolio', PortfolioController::class)
-        ->only('index')
-        ->names(['index' => 'portfolio']);
+        Route::resource('portfolio', PortfolioController::class)
+            ->only('index')
+            ->names(['index' => 'portfolio']);
 
-    // Blog routes (BinshopsBlog package) - manually defined to work with locale
-    Route::group(['prefix' => 'blog'], function () {
-        Route::get('/', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@index')
-            ->name('binshopsblog.index');
-
-        Route::get('/search', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@search')
-            ->name('binshopsblog.search');
-
-        Route::get('/feed', BlogFeedController::class)
-            ->name('binshopsblog.feed');
-
-        Route::get('/category{subcategories}', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@view_category')
-            ->where('subcategories', '^[a-zA-Z0-9-_\/]+$')
-            ->name('binshopsblog.view_category');
-
-        Route::get('/{blogPostSlug}', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@viewSinglePost')
-            ->name('binshopsblog.single');
-
-        // Comments
-        Route::group(['middleware' => 'throttle:10,3'], function () {
-            Route::post('/save_comment/{blogPostSlug}', 'BinshopsBlog\Controllers\BinshopsBlogCommentWriterController@addNewComment')
-                ->name('binshopsblog.comments.add_new_comment');
+        Route::prefix('blog')->name('blog.')->controller(BlogController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/search', 'search')->name('search');
+            Route::get('/feed', BlogFeedController::class)->name('feed');
+            Route::get('/category/{category}', 'category')->name('category');
+            Route::get('/{post}', 'show')->name('show');
         });
+
+        Route::get('/privacy-policy', function () {
+            return view('privacy-policy');
+        })->name('privacy-policy');
     });
 
-    // Other routes that need localization
-    Route::get('/privacy-policy', function () {
-        return view('privacy-policy');
-    })->name('privacy-policy');
-
-});
-
-// Fallback routes for default locale (English)
 Route::middleware(['setlocale'])->group(function () {
     Route::get('/', function () {
         return view('home');
     })->name('home.fallback');
+
     Route::redirect('/home', '/');
 
     Route::resource('portfolio', PortfolioController::class)
         ->only('index')
         ->names(['index' => 'portfolio.fallback']);
 
-    // Blog routes (BinshopsBlog package) - manually defined for fallback
-    Route::group(['prefix' => 'blog'], function () {
-        Route::get('/', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@index')
-            ->name('binshopsblog.index.fallback');
+    // Unprefixed blog URLs (old binshops links). Posts and categories go to their
+    // own language (301); list pages go to the visitor's language (302).
+    Route::prefix('blog')->group(function () {
+        Route::get('/', fn () => redirect()->route('blog.index'))->name('blog.index.fallback');
+        Route::get('/search', fn (Request $request) => redirect()->route('blog.search', $request->query()))
+            ->name('blog.search.fallback');
+        Route::get('/feed', fn () => redirect()->route('blog.feed'))->name('blog.feed.fallback');
+        Route::get('/category/{slug}', function (string $slug) {
+            $category = Category::where('slug', $slug)->orderByRaw('locale = ? desc', [app()->getLocale()])->firstOrFail();
 
-        Route::get('/search', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@search')
-            ->name('binshopsblog.search.fallback');
+            return redirect($category->url(), 301);
+        })->name('blog.category.fallback');
+        Route::get('/{slug}', function (string $slug) {
+            $post = Post::published()->where('slug', $slug)->orderByRaw('locale = ? desc', [app()->getLocale()])->firstOrFail();
 
-        Route::get('/feed', BlogFeedController::class)
-            ->name('binshopsblog.feed.fallback');
-
-        Route::get('/category{subcategories}', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@view_category')
-            ->where('subcategories', '^[a-zA-Z0-9-_\/]+$')
-            ->name('binshopsblog.view_category.fallback');
-
-        Route::get('/{blogPostSlug}', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@viewSinglePost')
-            ->name('binshopsblog.single.fallback');
-
-        // Comments
-        Route::group(['middleware' => 'throttle:10,3'], function () {
-            Route::post('/save_comment/{blogPostSlug}', 'BinshopsBlog\Controllers\BinshopsBlogCommentWriterController@addNewComment')
-                ->name('binshopsblog.comments.add_new_comment.fallback');
-        });
+            return redirect($post->url(), 301);
+        })->name('blog.show.fallback');
     });
 
     Route::get('/privacy-policy', function () {
         return view('privacy-policy');
     })->name('privacy-policy.fallback');
-
-    // Blog admin routes (BinshopsBlog package) - manually defined for admin functionality
-    Route::group(['prefix' => 'blog_admin'], function () {
-        Route::get('/', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@index')
-            ->name('binshopsblog.admin.index');
-
-        Route::get('/add_post', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@create_post')
-            ->name('binshopsblog.admin.create_post');
-
-        Route::post('/add_post', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@store_post')
-            ->name('binshopsblog.admin.store_post');
-
-        Route::get('/edit_post/{blogPostId}', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@edit_post')
-            ->name('binshopsblog.admin.edit_post');
-
-        Route::patch('/edit_post/{blogPostId}', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@update_post')
-            ->name('binshopsblog.admin.update_post');
-
-        Route::get('/remove_photo/{slug}', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@remove_photo')
-            ->name('binshopsblog.admin.remove_photo');
-
-        Route::get('/search', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@searchBlog')
-            ->name('binshopsblog.admin.searchblog');
-
-        Route::group(['prefix' => "image_uploads"], function () {
-            Route::get("/", "BinshopsBlog\Controllers\BinshopsBlogImageUploadController@index")
-                ->name("binshopsblog.admin.images.all");
-
-            Route::get("/upload", "BinshopsBlog\Controllers\BinshopsBlogImageUploadController@create")
-                ->name("binshopsblog.admin.images.upload");
-
-            Route::post("/upload", "BinshopsBlog\Controllers\BinshopsBlogImageUploadController@store")
-                ->name("binshopsblog.admin.images.store");
-        });
-
-        Route::delete('/delete_post/{blogPostId}', 'BinshopsBlog\Controllers\BinshopsBlogAdminController@destroy_post')
-            ->name('binshopsblog.admin.destroy_post');
-
-        Route::group(['prefix' => 'comments'], function () {
-            Route::get('/', 'BinshopsBlog\Controllers\BinshopsBlogCommentsAdminController@index')
-                ->name('binshopsblog.admin.comments.index');
-
-            Route::patch('/{commentId}', 'BinshopsBlog\Controllers\BinshopsBlogCommentsAdminController@approve')
-                ->name('binshopsblog.admin.comments.approve');
-
-            Route::delete('/{commentId}', 'BinshopsBlog\Controllers\BinshopsBlogCommentsAdminController@destroy')
-                ->name('binshopsblog.admin.comments.delete');
-        });
-
-        Route::group(['prefix' => 'categories'], function () {
-            Route::get('/', 'BinshopsBlog\Controllers\BinshopsBlogCategoryAdminController@index')
-                ->name('binshopsblog.admin.categories.index');
-
-            Route::get('/add_category', 'BinshopsBlog\Controllers\BinshopsBlogCategoryAdminController@create_category')
-                ->name('binshopsblog.admin.categories.create_category');
-
-            Route::post('/add_category', 'BinshopsBlog\Controllers\BinshopsBlogCategoryAdminController@store_category')
-                ->name('binshopsblog.admin.categories.store_category');
-
-            Route::get('/edit_category/{categoryId}', 'BinshopsBlog\Controllers\BinshopsBlogCategoryAdminController@edit_category')
-                ->name('binshopsblog.admin.categories.edit_category');
-
-            Route::patch('/edit_category/{categoryId}', 'BinshopsBlog\Controllers\BinshopsBlogCategoryAdminController@update_category')
-                ->name('binshopsblog.admin.categories.update_category');
-
-            Route::delete('/delete_category/{categoryId}', 'BinshopsBlog\Controllers\BinshopsBlogCategoryAdminController@destroy_category')
-                ->name('binshopsblog.admin.categories.destroy_category');
-        });
-    });
 });
 
-// Language switcher route
+// Language switcher
 Route::get('/locale/{locale}', function ($locale) {
     $availableLocales = config('app.available_locales', ['en']);
-
     if (!in_array($locale, $availableLocales)) {
         abort(404);
     }
-
-    // Store locale in session
     session(['locale' => $locale]);
 
-    // Redirect back to the same page with new locale
     $parsedUrl = parse_url(url()->previous());
     $path = $parsedUrl['path'] ?? '/';
     $query = isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '';
 
-    // Strip an existing locale prefix ("/es/blog" → "/blog", but not "/essay")
+    // Strip only a whole locale segment: "/essay" must not lose "es".
     $localePattern = '#^/(' . implode('|', array_map('preg_quote', $availableLocales)) . ')(?=/|$)#';
     $path = preg_replace($localePattern, '', $path) ?: '/';
 
     $newPath = rtrim('/' . $locale . $path, '/');
 
-    // Pages without a localized version (/projects, /login, …) keep their URL;
-    // the session locale set above still applies.
+    // Pages without a localized route (/projects, /login…) stay where they are.
     try {
         Route::getRoutes()->match(Request::create($newPath));
     } catch (HttpException) {
@@ -256,163 +140,3 @@ Route::get('/locale/{locale}', function ($locale) {
 
     return redirect($newPath . $query);
 })->name('locale.switch')->where(['locale' => implode('|', $availableLocales)]);
-// Route::get('/blog', function () {
-//     return view('vendor.binshopsblog.index');
-// })->name('blog');
-
-
-// Route::group(['middleware' => ['web'], 'namespace' => '\BinshopsBlog\Controllers'], function () {
-
-//     /** The main public facing blog routes - show all posts, view a category, rss feed, view a single post, also the add comment route */
-//     Route::group(['prefix' => config('binshopsblog.blog_prefix', 'blog')], function () {
-
-//         Route::get('/', 'BinshopsBlogReaderController@index')
-//             ->name('binshopsblog.index');
-
-//         Route::get('/search', 'BinshopsBlogReaderController@search')
-//             ->name('binshopsblog.search');
-
-//         Route::get('/feed', 'BinshopsBlogRssFeedController@feed')
-//             ->name('binshopsblog.feed'); //RSS feed
-
-//         Route::get('/category{subcategories}', 'BinshopsBlogReaderController@view_category')->where('subcategories', '^[a-zA-Z0-9-_\/]+$')->name('binshopsblog.view_category');
-
-//         //        Route::get('/category/{categorySlug}',
-//         //            'BinshopsBlogReaderController@view_category')
-//         //            ->name('binshopsblog.view_category');
-
-//         Route::get(
-//             '/{blogPostSlug}',
-//             'BinshopsBlogReaderController@viewSinglePost'
-//         )
-//             ->name('binshopsblog.single');
-
-//         // throttle to a max of 10 attempts in 3 minutes:
-//         Route::group(['middleware' => 'throttle:10,3'], function () {
-
-//             Route::post(
-//                 'save_comment/{blogPostSlug}',
-//                 'BinshopsBlogCommentWriterController@addNewComment'
-//             )
-//                 ->name('binshopsblog.comments.add_new_comment');
-//         });
-//     });
-
-//     /* Admin backend routes - CRUD for posts, categories, and approving/deleting submitted comments */
-//     Route::group(['prefix' => config('binshopsblog.admin_prefix', 'blog_admin')], function () {
-
-//         Route::get(
-//             '/search',
-//             'BinshopsBlogAdminController@searchBlog'
-//         )
-//             ->name('binshopsblog.admin.searchblog');
-
-//         Route::get('/', 'BinshopsBlogAdminController@index')
-//             ->name('binshopsblog.admin.index');
-
-//         Route::get(
-//             '/add_post',
-//             'BinshopsBlogAdminController@create_post'
-//         )
-//             ->name('binshopsblog.admin.create_post');
-
-
-//         Route::post(
-//             '/add_post',
-//             'BinshopsBlogAdminController@store_post'
-//         )
-//             ->name('binshopsblog.admin.store_post');
-
-
-//         Route::get(
-//             '/edit_post/{blogPostId}',
-//             'BinshopsBlogAdminController@edit_post'
-//         )
-//             ->name('binshopsblog.admin.edit_post');
-
-//         Route::patch(
-//             '/edit_post/{blogPostId}',
-//             'BinshopsBlogAdminController@update_post'
-//         )
-//             ->name('binshopsblog.admin.update_post');
-
-//         //Removes post's photo
-//         Route::get(
-//             '/remove_photo/{slug}',
-//             'BinshopsBlogAdminController@remove_photo'
-//         )
-//             ->name('binshopsblog.admin.remove_photo');
-
-//         Route::group(['prefix' => "image_uploads",], function () {
-
-//             Route::get("/", "BinshopsBlogImageUploadController@index")->name("binshopsblog.admin.images.all");
-
-//             Route::get("/upload", "BinshopsBlogImageUploadController@create")->name("binshopsblog.admin.images.upload");
-//             Route::post("/upload", "BinshopsBlogImageUploadController@store")->name("binshopsblog.admin.images.store");
-//         });
-
-//         Route::delete(
-//             '/delete_post/{blogPostId}',
-//             'BinshopsBlogAdminController@destroy_post'
-//         )
-//             ->name('binshopsblog.admin.destroy_post');
-
-//         Route::group(['prefix' => 'comments',], function () {
-
-//             Route::get(
-//                 '/',
-//                 'BinshopsBlogCommentsAdminController@index'
-//             )
-//                 ->name('binshopsblog.admin.comments.index');
-
-//             Route::patch(
-//                 '/{commentId}',
-//                 'BinshopsBlogCommentsAdminController@approve'
-//             )
-//                 ->name('binshopsblog.admin.comments.approve');
-//             Route::delete(
-//                 '/{commentId}',
-//                 'BinshopsBlogCommentsAdminController@destroy'
-//             )
-//                 ->name('binshopsblog.admin.comments.delete');
-//         });
-
-//         Route::group(['prefix' => 'categories'], function () {
-
-//             Route::get(
-//                 '/',
-//                 'BinshopsBlogCategoryAdminController@index'
-//             )
-//                 ->name('binshopsblog.admin.categories.index');
-
-//             Route::get(
-//                 '/add_category',
-//                 'BinshopsBlogCategoryAdminController@create_category'
-//             )
-//                 ->name('binshopsblog.admin.categories.create_category');
-//             Route::post(
-//                 '/add_category',
-//                 'BinshopsBlogCategoryAdminController@store_category'
-//             )
-//                 ->name('binshopsblog.admin.categories.store_category');
-
-//             Route::get(
-//                 '/edit_category/{categoryId}',
-//                 'BinshopsBlogCategoryAdminController@edit_category'
-//             )
-//                 ->name('binshopsblog.admin.categories.edit_category');
-
-//             Route::patch(
-//                 '/edit_category/{categoryId}',
-//                 'BinshopsBlogCategoryAdminController@update_category'
-//             )
-//                 ->name('binshopsblog.admin.categories.update_category');
-
-//             Route::delete(
-//                 '/delete_category/{categoryId}',
-//                 'BinshopsBlogCategoryAdminController@destroy_category'
-//             )
-//                 ->name('binshopsblog.admin.categories.destroy_category');
-//         });
-//     });
-// });

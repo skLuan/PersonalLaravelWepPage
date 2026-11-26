@@ -26,12 +26,11 @@ class SetLocale
         // Store locale in session for persistence
         Session::put('locale', $locale);
 
-        // route('…') calls without a locale (e.g. binshops' own views and models)
-        // get the current one filled in.
+        // route('…') calls without a locale get the current one filled in.
         URL::defaults(['locale' => $locale]);
 
         // Controllers receive route parameters by position. Drop {locale} so
-        // package controllers (binshops) get their own arguments, not "es".
+        // they get their own arguments (a slug), not "es".
         $request->route()?->forgetParameter('locale');
 
         return $next($request);

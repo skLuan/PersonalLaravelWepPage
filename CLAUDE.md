@@ -13,9 +13,10 @@ Guidance for Claude Code when working in this repository.
 
 Luan Erazo's personal site: a home page, a portfolio and a blog, with an animated Three.js + Yuka.js background (a school of "squid" agents that follow a path).
 
-- **Backend:** Laravel 10 (PHP ^8.1), MySQL, Blade views.
-- **Blog:** the `binshops/laravel-blog` package (routes `/blog/*`, admin at `/blog_admin/*`). Views are overridden in `resources/views/vendor/binshopsblog/`.
-- **Portfolio:** `Project` and `Skill` models (many-to-many via `project_skill`), CRUD at `/projects`.
+- **Backend:** Laravel 12 (PHP ^8.2; the dev image and Hostinger target are PHP 8.4), MariaDB, Blade views.
+- **Admin:** Filament 5 panel at `/admin` (posts, categories, projects, skills). Only users with `is_admin` get in.
+- **Blog:** own models `Post` / `Category` (one row per language, linked by `translation_group`) + `SeoMeta`. Public pages at `/{locale}/blog/*` (`BlogController`). The old `binshops/laravel-blog` package is removed; `php artisan blog:import-binshops` copies its tables.
+- **Portfolio:** `Project` and `Skill` models (many-to-many via `project_skill`), managed in the admin panel.
 - **Frontend:** Vite 5, Tailwind 3 (`darkMode: 'class'`), Alpine, iconify-icon, Three.js 0.167, Yuka 0.7.8.
 - **i18n:** English and Spanish, using URL prefixes `/{locale}/...` and the `SetLocale` middleware.
 - **Legacy:** Notion API (`CurriculumVitae` controller, `NotionService`). No route uses it any more; it is kept for reference.
@@ -45,10 +46,12 @@ Deployment isn't built yet. The plan is GitHub Actions → Hostinger over SSH, c
 | Area | Location |
 |---|---|
 | Routes | `routes/web.php` (public + localized), `routes/auth.php` (Breeze) |
-| Controllers | `app/Http/Controllers/` (`PortfolioController`, `ProjectController`, `BlogFeedController`, Breeze `Auth/*`, legacy `CurriculumVitae`) |
-| Commands | `php artisan user:create <email>`, the only way to add a user (registration is closed) |
+| Controllers | `app/Http/Controllers/` (`PortfolioController`, `BlogController`, `BlogFeedController`, Breeze `Auth/*`, legacy `CurriculumVitae`) |
+| Admin | `app/Filament/Resources/{Posts,Categories,Projects,Skills}`, panel in `app/Providers/Filament/AdminPanelProvider.php` |
+| Blog models | `app/Models/{Post,Category,SeoMeta}.php`, traits `app/Models/Concerns/{HasTranslations,HasSeo}.php` |
+| Commands | `php artisan user:create <email> [--admin]` (registration is closed), `php artisan blog:import-binshops [--dry-run] [--pair=a:b] [--set=id:locale]` |
 | Locale | `app/Http/Middleware/SetLocale.php` (alias `setlocale`), `config/app.php` → `available_locales` |
-| Translations | `resources/lang/{en,es}/messages.php`, `portfolio.php`. **Not** the root `lang/` folder (see gotchas) |
+| Translations | `resources/lang/{en,es}/messages.php`, `portfolio.php`, `blog.php`. **Not** the root `lang/` folder (see gotchas) |
 | Layout | `resources/views/layouts/app.blade.php`. Every page extends it. It loads GA + Clarity |
 | Components | Classes in `app/View/Components/`, Blade in `resources/views/components/` |
 | 3D entry | `resources/js/3dMain.js`. Picks `PortfolioWorld` or `BlogWorld` from the URL path |
@@ -61,19 +64,22 @@ Deployment isn't built yet. The plan is GitHub Actions → Hostinger over SSH, c
 - **Dark mode:** toggle the `dark` class on `<html>`. The choice is saved in `localStorage.theme`, and an inline script in the layout applies it before paint.
 - **Strings:** never hard-code UI text. Add it to **both** `resources/lang/en/*.php` and `resources/lang/es/*.php`. Files use flat dotted keys (`'nav.home' => ...`), read with `__('messages.nav.home')`.
 - **3D loop:** anything animated goes into `loop.updatables` and must expose `tick(delta)`. Yuka-driven meshes set `matrixAutoUpdate = false` and sync from `entity.worldMatrix`.
-- **3D bundle:** `3dMain.js` is only included on routes named `portfolio*` or `binshopsblog*` (see the layout). Pages that want the canvas also render `<x-three-canvas />`.
+- **3D bundle:** `3dMain.js` is only included on routes named `portfolio*` or `blog.*` (see the layout). Pages that want the canvas also render `<x-three-canvas />`.
 - **Commits:** conventional commits (`feat(i18n): …`, `fix(...)`, `docs: …`). The active branch is `develop/blog`; PRs target `main`.
 - Existing code comments are often in Spanish. Either language is fine; keep new comments short.
 
-## Gotchas (verified 2026-11-25)
+## Gotchas (verified 2026-11-26)
 
-- **Route names must stay unique**, or `route:cache` / `optimize` (which the deploy runs) fail. `AccessControlTest::test_route_names_are_unique` catches this. Localized routes use the plain name (`home`, `portfolio`, `binshopsblog.index`); the unprefixed copies end in `.fallback`.
+- **Route names must stay unique**, or `route:cache` / `optimize` (which the deploy runs) fail. `AccessControlTest::test_route_names_are_unique` catches this. Localized routes use the plain name (`home`, `portfolio`, `blog.index`); the unprefixed copies end in `.fallback`.
 - `SetLocale` removes `{locale}` from the route parameters, so controllers inside the `{locale}` group **can't** take a `$locale` argument. Use `app()->getLocale()` instead. `route()` fills in `locale` from `URL::defaults`.
 - `env()` is called directly in Blade views and controllers (`GOOGLE_TAG_ID`, `NOTION_*`). After `config:cache` these return `null`. Read them through `config()` instead.
-- Root `lang/` is ignored, because Laravel 10 prefers `resources/lang/` when it exists.
+- Root `lang/` is ignored, because Laravel prefers `resources/lang/` when it exists.
 - `darkMode_button.js` runs on every page but the toggle only exists on single blog posts. Every other page throws a `TypeError` and never reaches `Alpine.start()`.
 - `.gitignore` excludes `*.png` and `*.jpg`, so `public/imgs/*` (profile photo, hero) is not in git.
 - `/dashboard` and `/profile` use `<x-app-layout>`, which renders `layouts/app.blade.php`. That layout uses `@yield('content')`, not `$slot`, so the Breeze page content is probably not shown (not checked in a browser).
-- Blog uploads go to `public/blog_images/`, which is untracked. Any deploy that syncs `public/` with `--delete` must exclude it.
+- Blog uploads go to `public/blog_images/` (the `blog` disk), which is untracked. Any deploy that syncs `public/` with `--delete` must exclude it.
+- Filament's assets (`public/{js,css,fonts}/filament`) are gitignored. `composer install` regenerates them (`filament:upgrade` in `post-autoload-dump`).
+- Blade 12 treats `@context` as a directive: write `@@context` in inline JSON-LD.
+- Local admin for `/admin`: `php artisan db:seed --class=LocalAdminSeeder` (local/testing only; credentials in that file).
 
 The full list, with status, is in `journal.md`.

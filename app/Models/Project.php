@@ -25,7 +25,7 @@ class Project extends Model
     public function skills()
     {
         return $this->belongsToMany(Skill::class, 'project_skill')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     // Configura las opciones del slug

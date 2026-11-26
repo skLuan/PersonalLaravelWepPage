@@ -36,6 +36,16 @@ return [
             'throw' => false,
         ],
 
+        // Blog covers and inline images. Lives in public/ (no storage:link on
+        // shared hosting) and keeps the old binshops files at their URLs.
+        'blog' => [
+            'driver' => 'local',
+            'root' => public_path('blog_images'),
+            'url' => '/blog_images',
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
