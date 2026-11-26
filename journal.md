@@ -48,7 +48,7 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ### Kept on purpose
 - `feat/3d-cleanup` (worktree `../PersonalLaravelWepPage-wt/3d-cleanup`, no commits of its own yet, probably in use), `ci/deploy-hostinger` (2 unmerged commits), `main`, `develop/blog`, and this branch (1 commit ahead of `develop/blog`).
-- Remote branches `origin/develop/threejs`, `origin/develop/views` and `origin/portfolio` are merged but not deleted (deleting them on GitHub needs Luan's OK).
+- Remote branches `origin/develop/threejs`, `origin/develop/views` and `origin/portfolio` were merged into `develop/blog` and had no open PRs. Deleted on GitHub with Luan's OK (`git push origin --delete`). Remaining on GitHub: `main`, `develop/blog`, `ci/deploy-hostinger`.
 
 ---
 
