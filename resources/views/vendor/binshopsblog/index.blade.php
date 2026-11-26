@@ -29,7 +29,7 @@
         <div class="row" id="">
             <div class="col-md-9">
 
-                @if ($category_chain)
+                @if (isset($category_chain) && $category_chain)
                     <div class="container">
                         <div class="row">
                             <div class="col-md-12">

@@ -29,6 +29,112 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-25: Blog localization fixes and auth cleanup
+
+**Branch:** `fix/blog-locale-auth` (from `develop/blog` at `1764524`, git worktree at `../PersonalLaravelWepPage-wt/blog-locale-auth`) · **Goal:** fix #27–#30 and do the Phase 0 auth cleanup (#1–#5, #26).
+
+### Done
+- **#27 `/es/blog` 404**: confirmed the cause. `BinshopsBlogReaderController@index($category_slug)` received `es`. `SetLocale` now calls `$request->route()->forgetParameter('locale')` and sets `URL::defaults(['locale' => …])`.
+- **#28 search 500**: fixed by the same `URL::defaults`, because `route('binshopsblog.search')` now gets the locale. Before the fix, `/blog/search` (unprefixed) also returned 500.
+- **#29 feed 500**: new `BlogFeedController` + `resources/views/feed/rss.blade.php` (RSS 2.0, published posts only, `<language>` = current locale). It replaces binshops' controller, which needs `laravelium/feed`; that package is archived and its latest version requires PHP ^8.3.
+- **#30 language switcher**: it only adds the prefix when the localized path matches a route. Otherwise (`/projects`, `/login`) it redirects to the same path. It also keeps the query string, and it no longer treats `/essay` as starting with the `es` prefix.
+- New bug found and fixed: `partials/index_loop.blade.php` built post links as the relative `blog/<slug>`, which breaks on category pages (`/es/blog/category/x` → `/es/blog/category/blog/<slug>`). It now uses `$post->url()`.
+- Removed `App\Models\BlogPost` and `BlogCategories` and their config keys. I grepped `vendor/binshops`: nothing reads `blog_post_model` or `blog_category_model`, so these models were never used.
+- **Auth (#1–#3, #26)**: ran `composer remove laravel/ui`, deleted `Auth::routes()`, the 6 laravel/ui controllers, `auth/verify`, `auth/passwords/*` and `HomeController`. `auth/login.blade.php` was laravel/ui's Bootstrap view and has been replaced by Breeze's stub. Removed `/register` and `RegisteredUserController`. Added `php artisan user:create <email>`. Put `/projects` behind `auth`.
+- **Routes (#4, #5)**: `/home` and `/{locale}/home` now redirect to `/` and `/{locale}`. Removed the duplicate plain `/privacy-policy`, because the fallback group serves it. The portfolio resource is now `->only('index')`.
+- Tests: added `BlogLocaleTest` (11) and `AccessControlTest` (7), and removed `RegistrationTest`. `tests/TestCase.php` now calls `withoutVite()`: without `public/hot` or `public/build`, 15 tests failed with `ViteManifestNotFoundException`.
+- Docs: `plan.md` (ticked items, added new ones), `architecture.md`, `development.md`, `CLAUDE.md`.
+
+### ✅ Works (verified)
+- `php artisan test`: **40 passed** (116 assertions), in the worktree container.
+- `php artisan route:cache` and `php artisan optimize` succeed, with 78 routes and no duplicate names.
+- Over HTTP on the worktree server (:8090), with routes cached:
+  - 200: `/`, `/es`, `/blog`, `/es/blog`, `/en/blog`, `/es/blog/search?s=a`, `/blog/feed`, `/es/blog/feed`, `/portfolio`, `/es/portfolio`, `/privacy-policy`, `/es/privacy-policy`, `/login`, `/forgot-password`.
+  - 302: `/home` → `/`, `/es/home` → `/es`. `/projects`, `/projects/create` and `/dashboard` → `/login`.
+  - 404: `/register`, `/es/portfolio/1`.
+  - 401: `/blog_admin` (guest).
+- The feed output starts with `<?xml` (no leading whitespace) and links to `/es/blog`.
+
+### ❌ Broken / not working
+- `composer` reports **61 security advisories in 16 packages** (it was already like this; added to the plan).
+- `/dashboard` and `/profile` use `<x-app-layout>` → `layouts/app.blade.php`, which has `@yield('content')` and no `$slot`. Reading the code, the Breeze content likely doesn't render. I did not check this in a browser.
+
+### ❔ Not verified
+- Nothing has been checked in a real browser: login form styling (Breeze view on the guest layout), the 3D canvas on blog pages, the language switcher click.
+- The dev DB is still empty, so posts, categories and the feed were only tested with test data in the `testing` DB.
+- The blog admin login: no user exists yet. `canManageBinshopsBlogPosts()` requires `id === 1` and a fixed email. Running `php artisan user:create <that email>` on an empty `users` table should satisfy that check (not tried).
+
+### Next
+- Merge `fix/blog-locale-auth` into `develop/blog`, then run `git worktree remove` and remove the `luane-wt-app` container and `luane_wt_vendor` volume.
+- On the main stack after the merge: `docker compose exec app composer install` (laravel/ui is gone from the lock file).
+- Fix the dashboard and profile layout, or set `RouteServiceProvider::HOME = '/projects'`.
+
+---
+
+## 2026-11-24: Docker local environment and deployment plan
+
+**Branch:** `develop/blog` (after merge `58ddd15`) · **Goal:** add `compose.yml`, start the local stack, and plan GitHub Actions deployment based on `skLuan/thelamb.studio-web`.
+
+### Done
+- Added `compose.yml`, `docker/app/Dockerfile` (PHP 8.3 CLI + `pdo_mysql`, `intl`, `gd`, `zip`, `bcmath`, `exif`, `opcache`, `pcntl`), `docker/app/php.ini`, and `docker/db/init/01-testing-database.sql`. These copy the thelamb.studio-web layout. Services: `app` (:8080), `node` (Vite :5174), `db` (MariaDB 11.4 :3308), `mailpit` (:8026). vendor, node_modules and db each live in a named volume.
+- `vite.config.js`: Docker-aware (`VITE_IN_DOCKER`), port **5174** with polling. This resolves #14: Vite no longer takes port 8000.
+- `.env`: backed up to `.env.backup`, then pointed at the containers (`APP_URL=http://localhost:8080`, `DB_HOST=db`, user and password `luane`/`luane`). `.env.example` now has the same defaults plus `GOOGLE_TAG_ID` and `NOTION_*` (partly resolves #11).
+- `package.json`: added `"name": "luane-personal-site"`. Without it, npm wrote the folder name into `package-lock.json`, which is `www` inside the container.
+- `docs/plan.md`: added **Phase 0b**, deployment through GitHub Actions to Hostinger. Updated `docs/development.md`, `CLAUDE.md` and `README.md` for Docker.
+
+### ✅ Works (verified)
+- `docker compose up -d`: all 4 containers come up and `db` is healthy. On first start, `composer install` runs in the `vendor` volume and `npm install` in the `node_modules` volume.
+- `php artisan migrate --seed` on MariaDB: all 14 migrations run, including the binshops and fulltext ones, and the seeder runs.
+- HTTP 200: `/`, `/es`, `/portfolio`, `/es/portfolio`, `/en/portfolio`, `/blog`, `/privacy-policy`, `/es/privacy-policy`, `/login`. Spanish pages render `lang="es"` and Spanish copy.
+- Vite: the pages load `localhost:5174/@vite/client`, `app.css` and `app.js`. `app.js` and `3dMain.js` return 200 from 5174. Mailpit UI returns 200.
+- **Test suite runs for the first time: 23 passed, 2 failed.**
+
+### ❌ Broken / not working
+- 26. **2 auth tests fail**: `users can authenticate…` and `new users can register` expect `/dashboard` but get `/home`. The laravel/ui `LoginController` and `RegisterController` (`$redirectTo = '/home'`) override Breeze's (#3), and `/home` is only defined as `/{locale}/home`, so after logging in a real user lands on a 404.
+- 27. **`/es/blog` and `/en/blog` return 404**, even though `route:list` shows `{locale}/blog`. Likely cause (unconfirmed): binshops' `BinshopsBlogReaderController@index($category_slug = null)` receives `es` as the category slug, because the route parameters are passed by position.
+- 28. **`/es/blog/search` returns 500**: `search_form.blade.php` calls `route('binshopsblog.search')` without the `locale` parameter.
+- 29. **`/blog/feed` returns 500**: `Class "Laravelium\Feed\Feed" does not exist`. The RSS dependency isn't installed.
+- 30. The language switcher on `/blog` redirects to `/es/blog`, which is the 404 above. On `/projects` it redirects to `/es/projects`, which is also a 404 (#8).
+- Re-confirmed over HTTP: `/projects/create` and `/register` return 200 to guests (#1, #2), `/inWork` returns 500 (#7), and `/es/home` redirects to login (#9).
+- `/blog_admin` returns **401** to guests. That is correct, but there is no admin user to log in with yet.
+
+### ❔ Not verified
+- Anything in a real browser: the 3D canvas, HMR, dark mode, mobile layout.
+- Single blog posts and categories: the new MariaDB database is **empty**, with no posts and no projects. The old local MySQL data, which `.env.backup` points at, was not imported.
+- Anything about the deployment (Phase 0b is a plan only). It's also unconfirmed that `luane.online` is on the same Hostinger account as thelamb.studio.
+
+### Next
+- Fix #27–#29 to finish "Blog localization", then tick it.
+- Phase 0 auth cleanup (it fixes #3, #26 and `route:cache`, and unblocks Phase 0b).
+- Optionally, import the old DB: `mysqldump luane | docker compose exec -T db mariadb -uluane -pluane luane`.
+
+---
+
+## 2026-11-23: Resolve `develop/multilang` merge conflict in routes
+
+**Branch:** `develop/blog` · **Goal:** resolve the `routes/web.php` conflict from merging `develop/multilang`.
+
+### Done
+- Resolved all conflict hunks in `routes/web.php` and staged it. The merge commit is not made yet.
+- Kept multilang's structure: manual blog routes inside `{locale}`, plus the unprefixed fallback group (`*.fallback` names, `/blog_admin`). This is required because multilang sets `include_default_routes => false` and `BlogPost`/`BlogCategories` build URLs from the `.fallback` names.
+- Kept HEAD's `App` and `HomeController` imports, and used `HomeController::class` in both groups.
+- Dropped HEAD's unprefixed `/` and `/portfolio` routes. The fallback group serves the same URLs, and no view calls `route('home')` or `route('portfolio')` without a locale (checked with grep).
+
+### ✅ Works (verified)
+- `php -l routes/web.php` passes, and no conflict markers are left.
+- `php artisan route:list` shows 98 routes. It includes the 6 public blog routes under `/{locale}/blog` and 6 under `/blog`, the 20 `binshopsblog.admin.*` routes, and `portfolio.fallback` / `home.fallback`.
+
+### ❌ Broken / not working
+- `home.fallback` is the name of both `/` and `/home`, and `home` is the name of both `{locale}` and `{locale}/home`. This was already the case on both branches, and `route:cache` was already failing (#3, #4).
+
+### ❔ Not verified
+- I did not test any page in a browser. The blog index, single post, category links and language switcher on `/blog` all still need checking.
+
+### Next
+- Commit the merge, then check `/blog`, `/es/blog` and the language switcher in a browser. If they work, tick "Blog localization" in `docs/plan.md`.
+
+---
+
 ## 2026-11-23: Full project read-through and documentation
 
 **Branch:** `develop/blog` · **Goal:** read the whole project and its git history, then write the project docs.

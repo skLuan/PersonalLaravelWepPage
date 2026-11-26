@@ -24,25 +24,29 @@ See [docs/architecture.md](docs/architecture.md) for the full map.
 
 ## Commands
 
+The local environment is Docker (`compose.yml`): app at http://localhost:8080, Vite at :5174, MariaDB at :3308 (`luane`/`luane`), Mailpit at :8026.
+
 ```bash
-composer install && npm install
-cp .env.example .env && php artisan key:generate   # then add NOTION_*, GOOGLE_TAG_ID if needed
-php artisan migrate --seed       # seeds the skills table only
-npm run dev                      # Vite dev server is pinned to 127.0.0.1:8000 (vite.config.js)
-php artisan serve --port=8080    # use a port other than 8000, or it clashes with Vite
-npm run build                    # production assets -> public/build (gitignored)
-php artisan test                 # needs a reachable MySQL with a `testing` database (phpunit.xml)
-php artisan route:list --except-vendor
+docker compose up -d                                   # start everything (first run installs vendor + node_modules into volumes)
+docker compose exec app php artisan migrate --seed     # seeds the skills table only
+docker compose exec app php artisan test               # uses the `testing` DB (docker/db/init)
+docker compose exec app php artisan route:list --except-vendor
+docker compose exec app composer …                     # composer runs INSIDE: vendor/ is a named volume
+docker compose run --rm node npm run build             # production assets -> public/build (gitignored)
+docker compose logs -f app node
 ```
 
-`.env` points at MySQL on `localhost:3306` and `APP_URL=http://luane.test`. The DB is not in this repo's Docker setup.
+`.env` uses container hosts (`DB_HOST=db`, `MAIL_HOST=mailpit`). The pre-Docker `.env` is saved as `.env.backup`. Running natively also works (see docs/development.md, Option B), with Vite on 127.0.0.1:5174.
+
+Deployment isn't built yet. The plan is GitHub Actions → Hostinger over SSH, copied from `skLuan/thelamb.studio-web` (local checkout at `../thelamb.studio`); see Phase 0b in `docs/plan.md`.
 
 ## Code map
 
 | Area | Location |
 |---|---|
 | Routes | `routes/web.php` (public + localized), `routes/auth.php` (Breeze) |
-| Controllers | `app/Http/Controllers/` (`PortfolioController`, `ProjectController`, `HomeController`, legacy `CurriculumVitae`) |
+| Controllers | `app/Http/Controllers/` (`PortfolioController`, `ProjectController`, `BlogFeedController`, Breeze `Auth/*`, legacy `CurriculumVitae`) |
+| Commands | `php artisan user:create <email>`, the only way to add a user (registration is closed) |
 | Locale | `app/Http/Middleware/SetLocale.php` (alias `setlocale`), `config/app.php` → `available_locales` |
 | Translations | `resources/lang/{en,es}/messages.php`, `portfolio.php`. **Not** the root `lang/` folder (see gotchas) |
 | Layout | `resources/views/layouts/app.blade.php`. Every page extends it. It loads GA + Clarity |
@@ -61,14 +65,15 @@ php artisan route:list --except-vendor
 - **Commits:** conventional commits (`feat(i18n): …`, `fix(...)`, `docs: …`). The active branch is `develop/blog`; PRs target `main`.
 - Existing code comments are often in Spanish. Either language is fine; keep new comments short.
 
-## Gotchas (verified 2026-11-23)
+## Gotchas (verified 2026-11-25)
 
-- `php artisan route:cache` **fails**: `password.request` and other route names are defined twice, because both Breeze (`routes/auth.php`) and laravel/ui (`Auth::routes()`) are registered. The production Docker entrypoint runs `route:cache`, so it will crash.
-- `/projects` CRUD and `/register` are **public** (no auth middleware).
+- **Route names must stay unique**, or `route:cache` / `optimize` (which the deploy runs) fail. `AccessControlTest::test_route_names_are_unique` catches this. Localized routes use the plain name (`home`, `portfolio`, `binshopsblog.index`); the unprefixed copies end in `.fallback`.
+- `SetLocale` removes `{locale}` from the route parameters, so controllers inside the `{locale}` group **can't** take a `$locale` argument. Use `app()->getLocale()` instead. `route()` fills in `locale` from `URL::defaults`.
 - `env()` is called directly in Blade views and controllers (`GOOGLE_TAG_ID`, `NOTION_*`). After `config:cache` these return `null`. Read them through `config()` instead.
 - Root `lang/` is ignored, because Laravel 10 prefers `resources/lang/` when it exists.
 - `darkMode_button.js` runs on every page but the toggle only exists on single blog posts. Every other page throws a `TypeError` and never reaches `Alpine.start()`.
 - `.gitignore` excludes `*.png` and `*.jpg`, so `public/imgs/*` (profile photo, hero) is not in git.
-- `vite.config.js` pins the dev server to port 8000, the same default port as `artisan serve`.
+- `/dashboard` and `/profile` use `<x-app-layout>`, which renders `layouts/app.blade.php`. That layout uses `@yield('content')`, not `$slot`, so the Breeze page content is probably not shown (not checked in a browser).
+- Blog uploads go to `public/blog_images/`, which is untracked. Any deploy that syncs `public/` with `--delete` must exclude it.
 
 The full list, with status, is in `journal.md`.

@@ -26,17 +26,16 @@ Source: `routes/web.php`, `routes/auth.php`, plus routes registered by packages.
 
 | URL | Handler | Notes |
 |---|---|---|
-| `/` | closure → `home` view | Not localized. |
-| `/{locale}` | closure → `home` | `locale` ∈ `config('app.available_locales')` = `en`, `es`. |
-| `/{locale}/home` | `HomeController@index` | Requires login (the controller sets the `auth` middleware). |
-| `/portfolio`, `/{locale}/portfolio` | `PortfolioController@index` | Lists projects with skills. The localized one is a full `resource`, but only `index` exists. |
-| `/projects` (resource) | `ProjectController` | CRUD for portfolio projects; the route key is `slug`. **No auth.** No `show` view. |
-| `/blog`, `/blog/{slug}`, `/blog/search`, `/blog/feed`, `/blog/category/...` | binshops `BinshopsBlogReaderController` etc. | The package registers these (`include_default_routes => true`). The prefix comes from `config/binshopsblog.php`. |
-| `/blog_admin/*` | binshops admin controllers | Needs `User::canManageBinshopsBlogPosts()`. |
+| `/` (`home.fallback`), `/{locale}` (`home`) | closure → `home` view | `locale` ∈ `config('app.available_locales')` = `en`, `es`. |
+| `/home`, `/{locale}/home` | redirect | To `/` and `/{locale}`. |
+| `/portfolio`, `/{locale}/portfolio` | `PortfolioController@index` | Lists projects with skills. `resource(...)->only('index')`. |
+| `/projects` (resource) | `ProjectController` | CRUD for portfolio projects; the route key is `slug`. **`auth` middleware.** No `show` view. |
+| `/blog/*`, `/{locale}/blog/*` (index, `search`, `feed`, `category/...`, `{slug}`) | binshops `BinshopsBlogReaderController`; `feed` → `BlogFeedController` | Defined by hand in `web.php` (`include_default_routes => false`). Unprefixed names end in `.fallback`. `BlogFeedController` replaces binshops' feed controller, which needs the abandoned `laravelium/feed`. |
+| `/blog_admin/*` | binshops admin controllers | Needs `User::canManageBinshopsBlogPosts()` (user id 1 with a fixed email). |
 | `/privacy-policy`, `/{locale}/privacy-policy` | closure | Plus redirects from `/privacy`, `/pp`, `/policy`, and several typo URLs. |
-| `/locale/{locale}` | closure | Saves the locale in the session and redirects to the previous path with the new prefix. |
+| `/locale/{locale}` | closure | Saves the locale in the session and redirects to the previous path with the new prefix. If that path has no localized route (`/projects`, `/login`), it redirects to the path unchanged. |
 | `/dashboard`, `/profile` | Breeze | Auth only. |
-| `/login`, `/register`, `/password/*`, … | Breeze **and** laravel/ui | Defined twice, which is what breaks `route:cache`. |
+| `/login`, `/forgot-password`, `/reset-password/*`, `/verify-email/*`, … | Breeze (`routes/auth.php`) | The only auth stack (laravel/ui was removed 2026-11-25). **No `/register`**: create users with `php artisan user:create`. |
 | `/inWork` | closure | Legacy landing page; currently errors. |
 | `/api/user` | Sanctum | Laravel default. |
 
@@ -61,7 +60,7 @@ The blog moved from Notion to `binshops/laravel-blog` in April 2025. Configurati
 ## Internationalization
 
 - `config/app.php`: `locale = en`, `fallback_locale = en`, `available_locales = ['en', 'es']`.
-- The `SetLocale` middleware (alias `setlocale`) runs only on the `{locale}`-prefixed group. It sets `App::setLocale()` and saves the locale in the session.
+- The `SetLocale` middleware (alias `setlocale`) runs on the `{locale}`-prefixed group and the unprefixed fallback group. It sets `App::setLocale()`, saves the locale in the session, and sets `URL::defaults(['locale' => …])`, so `route('binshopsblog.single', $slug)` works without passing a locale. It also **removes `locale` from the route parameters** (`forgetParameter`), because Laravel passes route parameters to controllers by position, and binshops' controllers would otherwise receive `es` as their first argument.
 - Strings live in `resources/lang/{en,es}/messages.php` (nav, home, footer, language switcher) and `portfolio.php`. The keys are flat with dots (`'hero.name'`).
 - `<x-language-switcher />` lists the other locales and links to `route('locale.switch', $locale)`.
 - The layout sets `<html lang dir>`, with RTL support ready for `ar`, `he`, `fa` and `ur`.

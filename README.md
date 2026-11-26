@@ -23,19 +23,18 @@ Live site: <https://luane.online>
 
 ## Quick start
 
-Requirements: PHP 8.1+, Composer, Node 18+, MySQL.
+Requirements: Docker Desktop.
 
 ```bash
-composer install && npm install
-cp .env.example .env && php artisan key:generate
-# set DB_* in .env
-php artisan migrate --seed
-
-npm run dev                      # Vite → 127.0.0.1:8000
-php artisan serve --port=8080    # open http://localhost:8080
+cp .env.example .env
+docker compose up -d                                  # PHP 8.3 · Vite · MariaDB 11.4 · Mailpit
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
 ```
 
-`public/imgs/` isn't tracked in git (`.gitignore` excludes `*.png` and `*.jpg`), so copy those images in by hand. See the [development guide](docs/development.md) for env vars, tests and production builds.
+Open <http://localhost:8080>. Outgoing mail lands in Mailpit at <http://localhost:8026>.
+
+`public/imgs/` isn't tracked in git (`.gitignore` excludes `*.png` and `*.jpg`), so copy those images in by hand. The [development guide](docs/development.md) covers running without Docker, env vars, tests and production builds.
 
 ## Tech stack
 
