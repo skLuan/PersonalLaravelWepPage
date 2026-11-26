@@ -29,6 +29,28 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-26: Unstyled :8080 (stale `public/hot`), temporary worktree container removed
+
+**Branch:** `claude/blog-filament-seo-migration-6c5c1d` · **Goal:** Luan saw :8080 render without CSS/JS, with CORS errors for `http://127.0.0.1:8000/@vite/client`, and asked whether `luane-fil-app` was the stack to use.
+
+### Done
+- **Cause:** at 00:12 the main checkout switched to `ci/deploy-hostinger` (reflog), which still has the pre-Docker `vite.config.js` (host 127.0.0.1, port 8000). Vite in `luane-node` hot-reloaded that config (its log showed `Local: http://127.0.0.1:8000`) and wrote `public/hot` = `http://127.0.0.1:8000`. The containers were then killed (exit 137), so Vite never removed the file. Laravel kept pointing every asset at an address the browser can't reach.
+- `docker compose up -d` in the main checkout: Vite rewrote `public/hot` = `http://localhost:5174`, and pages are styled again (checked in the built-in browser).
+- `compose.yml`: `init: true` on `app` and `node`; `exec php artisan serve`; node runs `exec node_modules/.bin/vite` (with `npx vite`, the stop still left `public/hot` behind).
+- Removed the temporary `luane-fil-app` container (made by hand for this worktree on :8091), the `luane_fil_vendor` and `luane_fil_node_modules` volumes, the `luane-app:php84` image tag, and the `luane_fil` / `testing_fil` databases.
+- Docs: troubleshooting note and branch table in `docs/development.md`, a gotcha in `CLAUDE.md`.
+
+### ✅ Works (verified)
+- New compose config, applied to the `luane` project with `-f <worktree>/compose.yml --project-directory <main checkout>`: `stop` takes ~1 s (before: 10 s then kill). `luane-node` exits 0 and **`public/hot` is deleted**. While node is stopped, :8080 serves `/build/assets/app-*.css`. On `start`, `public/hot` is `http://localhost:5174` again. :8080 → 200.
+
+### ❔ Not verified
+- `luane-app` and `luane-node` are currently running with this branch's compose config. `develop/blog` still has the previous `compose.yml` until this branch is merged. The old config still works; it just doesn't stop cleanly.
+
+### Known, unrelated
+- `darkMode_button.js:4` still throws `TypeError` on every page except single posts (#16).
+
+---
+
 ## 2026-11-26: Main stack 500 after the merge (`Filament\PanelProvider` not found), branch cleanup
 
 **Branch:** `claude/blog-filament-seo-migration-6c5c1d` (commit `8dff4ef`) · **Goal:** fix the main Docker stack after `develop/blog` was fast-forwarded to `de62ac1`, then delete merged branches.

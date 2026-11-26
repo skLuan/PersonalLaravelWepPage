@@ -80,6 +80,7 @@ Deployment isn't built yet. The plan is GitHub Actions → Hostinger over SSH, c
 - `.gitignore` excludes `*.png` and `*.jpg`, so `public/imgs/*` (profile photo, hero) is not in git.
 - `/dashboard` and `/profile` use `<x-app-layout>`, which renders `layouts/app.blade.php`. That layout uses `@yield('content')`, not `$slot`, so the Breeze page content is probably not shown (not checked in a browser).
 - Blog uploads go to `public/blog_images/` (the `blog` disk), which is untracked. Any deploy that syncs `public/` with `--delete` must exclude it.
+- Unstyled pages + CORS errors for `127.0.0.1:8000/@vite/client` = stale `public/hot`. It happens when Vite is killed or reloads with an old `vite.config.js` (e.g. on `ci/deploy-hostinger`). `docker compose restart node` fixes it. The only local stack is compose project `luane`.
 - Filament's assets (`public/{js,css,fonts}/filament`) are gitignored. `composer install` regenerates them (`filament:upgrade` in `post-autoload-dump`).
 - Blade 12 treats `@context` as a directive: write `@@context` in inline JSON-LD.
 - Local admin for `/admin`: `php artisan db:seed --class=LocalAdminSeeder` (local/testing only; credentials in that file).

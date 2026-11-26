@@ -35,7 +35,8 @@ Notes:
 - `vendor/` and `node_modules/` live in named volumes, not in your working copy (on Windows, bind-mounted `vendor/` is slow). Your IDE won't see the container's `vendor/`. Run `composer install` on the host as well if you want autocompletion.
 - The ports are offset from thelamb.studio-web (8000/5173/3307/8025), so both stacks can run at once.
 - `docker/db/init/` runs only when the `db` volume is first created. To re-run it, `docker compose down -v`.
-- If the `node` container is killed without a clean shutdown, `public/hot` can be left behind and pages will try to load assets from a dead Vite server. Delete `public/hot` in that case.
+- **Page without styles, console shows CORS errors for `127.0.0.1:8000/@vite/client`** (or any address other than `localhost:5174`): `public/hot` is stale. Vite writes it on start and deletes it on a clean stop (`init: true` + `exec` in `compose.yml` make `docker compose stop` clean). It goes stale when Vite is killed, or when you check out a branch with the old pre-Docker `vite.config.js` (port 8000) while `node` runs: Vite reloads with that config. Fix: `docker compose restart node` (or delete `public/hot`). While `node` is stopped, pages use `public/build` (`docker compose run --rm node npm run build` to refresh it).
+- The only local stack is the compose project **`luane`** (containers `luane-app`, `luane-node`, `luane-db`, `luane-mailpit`). Containers with other names (e.g. `luane-fil-app`, `luane-wt-app`) were temporary, made by hand for a git worktree; remove them when that worktree is done.
 
 ## Option B: Native toolchain
 
@@ -162,9 +163,11 @@ Production checklist:
 
 ## Branches
 
-| Branch | State (2026-11-23) |
+| Branch | State (2026-11-26) |
 |---|---|
-| `develop/blog` | Active. Blog, portfolio, i18n, dark mode. |
-| `main` | 32 commits behind `develop/blog`. |
-| `develop/multilang` | 2 commits not merged: localized blog models and routes. |
-| `blog/larablog`, `blog/notion`, `develop/threejs`, `develop/views`, `portfolio` | Fully merged; can be deleted. |
+| `develop/blog` | Active. Laravel 12 + Filament admin, own blog models, portfolio, i18n. |
+| `main` | Behind `develop/blog`; PRs target it. |
+| `ci/deploy-hostinger` | 2 commits (GitHub Actions deploy), branched from `main` **before** the Docker setup: its `vite.config.js` is the old one (port 8000). Rebase it on `develop/blog` before working on it, or Vite in Docker breaks (see the stale `public/hot` note above). |
+| `feat/3d-cleanup` | Worktree `../PersonalLaravelWepPage-wt/3d-cleanup`, no commits yet. |
+
+`develop/multilang`, `fix/blog-locale-auth`, `blog/larablog`, `blog/notion`, `develop/threejs`, `develop/views` and `portfolio` were merged and deleted on 2026-11-26 (locally and on GitHub).

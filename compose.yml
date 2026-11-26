@@ -34,7 +34,9 @@ services:
     # run pending migrations, then serve. After a pull that changes packages or
     # migrations: `docker compose restart app`. After a Dockerfile change (PHP
     # version): `docker compose up -d --build app`.
-    command: sh -c "git config --global --add safe.directory /var/www && composer install --no-interaction --no-progress && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    # init + exec: `docker compose stop` reaches the server (no 10 s timeout and kill).
+    init: true
+    command: sh -c "git config --global --add safe.directory /var/www && composer install --no-interaction --no-progress && php artisan migrate --force && exec php artisan serve --host=0.0.0.0 --port=8000"
     ports:
       - "8080:8000"
     volumes:
@@ -51,7 +53,11 @@ services:
     image: node:22-bookworm-slim
     container_name: luane-node
     working_dir: /var/www
-    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    # Vite writes public/hot (= http://localhost:5174) on start and deletes it on
+    # a clean stop. init + exec make sure the stop signal reaches Vite; a killed
+    # Vite leaves a stale public/hot and every page loads unstyled.
+    init: true
+    command: sh -c "npm install --no-audit --no-fund && exec node_modules/.bin/vite"
     environment:
       VITE_IN_DOCKER: "1"
     ports:
