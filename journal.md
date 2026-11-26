@@ -42,7 +42,7 @@ One entry per working session, **newest first**. Each entry records what was don
 - Removed `App\Models\BlogPost` and `BlogCategories` and their config keys. I grepped `vendor/binshops`: nothing reads `blog_post_model` or `blog_category_model`, so these models were never used.
 - **Auth (#1–#3, #26)**: ran `composer remove laravel/ui`, deleted `Auth::routes()`, the 6 laravel/ui controllers, `auth/verify`, `auth/passwords/*` and `HomeController`. `auth/login.blade.php` was laravel/ui's Bootstrap view and has been replaced by Breeze's stub. Removed `/register` and `RegisteredUserController`. Added `php artisan user:create <email>`. Put `/projects` behind `auth`.
 - **Routes (#4, #5)**: `/home` and `/{locale}/home` now redirect to `/` and `/{locale}`. Removed the duplicate plain `/privacy-policy`, because the fallback group serves it. The portfolio resource is now `->only('index')`.
-- Tests: added `BlogLocaleTest` (11) and `AccessControlTest` (7), and removed `RegistrationTest`.
+- Tests: added `BlogLocaleTest` (11) and `AccessControlTest` (7), and removed `RegistrationTest`. `tests/TestCase.php` now calls `withoutVite()`: without `public/hot` or `public/build`, 15 tests failed with `ViteManifestNotFoundException`.
 - Docs: `plan.md` (ticked items, added new ones), `architecture.md`, `development.md`, `CLAUDE.md`.
 
 ### ✅ Works (verified)
