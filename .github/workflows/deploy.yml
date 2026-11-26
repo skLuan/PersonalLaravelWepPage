@@ -1,7 +1,12 @@
 name: Deploy to Hostinger
 
 # Builds the app in CI (Composer --no-dev + Vite) and uploads it to the
-# Hostinger server over SSH with rsync. The server keeps its own .env,
+# Hostinger server over SSH with rsync.
+#
+# Server layout (see scripts/hostinger/migrate-layout.sh):
+#   ~/domains/luane.online/              <- HOSTINGER_DEPLOY_PATH (Laravel root)
+#   ~/domains/luane.online/public_html   -> public   (only this is web-served)
+# The server keeps its own .env,
 # storage/, public/imgs/, public/blog_images/, images (gitignored) and
 # .htaccess files; rsync never touches them.
 
@@ -87,15 +92,27 @@ jobs:
             IdentitiesOnly yes
             ServerAliveInterval 30
           CFG
-          ssh hostinger "test -d '$DEPLOY_PATH' && test -f '$DEPLOY_PATH/artisan'" \
-            || { echo "::error::$DEPLOY_PATH does not exist or is not a Laravel app on the server"; exit 1; }
+
+      - name: Check server layout
+        run: |
+          ssh hostinger "set -e
+            cd '$DEPLOY_PATH' || { echo '$DEPLOY_PATH does not exist'; exit 1; }
+            [ \"\$(basename \"\$PWD\")\" != public_html ] || { echo 'DEPLOY_PATH points inside public_html; it must be the folder above it'; exit 1; }
+            [ -f artisan ] || { echo 'artisan not found in DEPLOY_PATH'; exit 1; }
+            [ -L public_html ] && [ \"\$(readlink public_html)\" = public ] \
+              || { echo 'public_html is not a symlink to public. Run scripts/hostinger/migrate-layout.sh --apply first'; exit 1; }
+            echo \"layout ok: \$PWD (public_html -> public)\""
 
       - name: Maintenance mode on
         run: ssh hostinger "cd '$DEPLOY_PATH' && $REMOTE_PHP artisan down --retry=15 || true"
 
       - name: Upload files (rsync)
         run: |
+          # 'protect /*' keeps top-level entries that are not in the repo
+          # (public_html symlink, backups, Hostinger files) from being deleted.
           rsync -az --delete --no-perms --omit-dir-times --itemize-changes \
+            --filter='protect /*' \
+            --exclude='/public_html' \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='node_modules/' \
@@ -137,6 +154,14 @@ jobs:
           code=$(curl -s -o /dev/null -w '%{http_code}' -L https://luane.online/)
           echo "https://luane.online/ -> HTTP $code"
           [ "$code" = "200" ]
+          # Nothing outside public/ may be reachable from the web.
+          leak=0
+          for p in /.env /artisan /composer.json /composer.lock /public/index.php /vendor/autoload.php /storage/logs/laravel.log; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' "https://luane.online$p")
+            echo "$p -> $c"
+            [ "$c" = "200" ] && { echo "::error::$p is publicly reachable"; leak=1; }
+          done
+          exit $leak
 
       - name: Clean up SSH key
         if: always()

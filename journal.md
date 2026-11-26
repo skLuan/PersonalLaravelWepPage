@@ -37,21 +37,25 @@ One entry per working session, **newest first**. Each entry records what was don
 - Added `.github/workflows/deploy.yml`: build in CI (Composer no-dev + Vite), rsync over SSH, migrate, cache, smoke test.
 - Fixed #10/#11: `GOOGLE_TAG_ID` and `NOTION_*` now go through `config/services.php`; keys added to `.env.example`.
 - Documented the deploy in `docs/development.md`.
+- Security: moved to a layout where only Laravel's `public/` is web-served (`public_html -> public`, app one level up). Added `scripts/hostinger/migrate-layout.sh` (one-time, dry run by default, backup) and `rollback-layout.sh`. The workflow checks the layout before deploying and fails if `/.env`, `/artisan`, etc. answer 200.
 
 ### ✅ Works (verified)
 - `https://luane.online` answers 200 from Hostinger (`platform: hostinger`, `x-powered-by: PHP/8.2`).
 - Workflow passes `actionlint` and YAML parsing.
 - No `env()` calls left outside `config/` (`rg "env\(" app resources routes`).
+- Before the move (from outside): `/.env` 403, `/.git/config` 403 (a `.git` folder exists in `public_html`), `/storage/logs/laravel.log` 403, `/public/index.php` 200, `/composer.json` and `/artisan` 404. Protection relied entirely on the root `.htaccess`.
+- `migrate-layout.sh`, `rollback-layout.sh`, the layout check and the rsync filters were run against a simulated Hostinger folder with a fake `php`: files move up, `public_html -> public`, rsync deletes stale repo files only and keeps `.env`, `storage/`, `public/imgs`, `public/blog_images`, `.htaccess`, the symlink and unknown top-level folders.
 
 ### ❌ Broken / not working
 - `route:cache` still fails (#3), so the workflow skips it.
 
 ### ❔ Not verified
+- The migration has not run on the real server. Hostinger is expected to follow the `public_html` symlink (common setup), but this is not verified.
 - The real server path, SSH user and whether `php` on the server CLI is 8.2. The workflow has not run yet because the secrets are not set.
 - PHP was not available in the session, so the config changes were not run through `php -l` (CI will).
 
 ### Next
-- Set the `HOSTINGER_*` secrets, merge to `main`, watch the first run.
+- Run `migrate-layout.sh` on the server, set the `HOSTINGER_*` secrets (`HOSTINGER_DEPLOY_PATH=/home/<user>/domains/luane.online`), merge to `main`, watch the first run.
 
 ---
 
