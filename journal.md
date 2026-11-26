@@ -29,6 +29,29 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-26: Main stack 500 after the merge (`Filament\PanelProvider` not found), branch cleanup
+
+**Branch:** `claude/blog-filament-seo-migration-6c5c1d` (commit `8dff4ef`) · **Goal:** fix the main Docker stack after `develop/blog` was fast-forwarded to `de62ac1`, then delete merged branches.
+
+### Done
+- Cause: `compose.yml` ran `composer install` only when `vendor/autoload.php` was missing. The `luane_vendor` volume still held Laravel 10.48 without Filament, and the image was still PHP 8.3.
+- Rebuilt `luane-app:dev` (PHP 8.4.28). Ran `composer install` + `migrate --force` in a one-off `docker compose run --rm app`, which applied the 2 new migrations to the `luane` DB.
+- `compose.yml` (on this branch, **not yet in `develop/blog`**): every app start now runs `git config safe.directory` → `composer install` → `migrate --force` → `serve`. Documented in `CLAUDE.md` and `docs/development.md`.
+- Removed the `fix/blog-locale-auth` worktree, the `luane-wt-app` container and the `luane_wt_vendor` volume. Deleted the merged local branches `fix/blog-locale-auth`, `develop/multilang`, `develop/threejs`, `develop/views`, `blog/larablog`, `blog/notion` and `portfolio` (`git branch -d`).
+
+### ✅ Works (verified)
+- `:8080` after the fix: `/`, `/es`, `/en/blog`, `/en/portfolio` and `/admin/login` return 200; `/blog` → 302 `/en/blog`; `/admin` → login.
+- The new start command (without `serve`) exits 0 in a throwaway container on the main stack's volumes, reporting Laravel 12.74.0.
+
+### ❔ Not verified
+- The edited `compose.yml` has not been used by the real `luane-app` container yet: it starts from `develop/blog`, which still has the old command.
+
+### Kept on purpose
+- `feat/3d-cleanup` (worktree `../PersonalLaravelWepPage-wt/3d-cleanup`, no commits of its own yet, probably in use), `ci/deploy-hostinger` (2 unmerged commits), `main`, `develop/blog`, and this branch (1 commit ahead of `develop/blog`).
+- Remote branches `origin/develop/threejs`, `origin/develop/views` and `origin/portfolio` are merged but not deleted (deleting them on GitHub needs Luan's OK).
+
+---
+
 ## 2026-11-26: Laravel 12 + Filament 5, own blog models, binshops removed
 
 **Branch:** `claude/blog-filament-seo-migration-6c5c1d` (worktree `.claude/worktrees/blog-filament-seo-migration-6c5c1d`, with `fix/blog-locale-auth` merged in at `1b99869`) · **Goal:** phases B, C and D of [docs/design-blog-filament-seo.md](docs/design-blog-filament-seo.md), so the SEO work can start.
