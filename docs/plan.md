@@ -9,16 +9,18 @@ The `#n` numbers point to the problem list in the 2026-11-23 entry of [journal.m
 
 The site has open write endpoints and won't boot in a production container. Fix these before adding features.
 
-- [ ] **Protect portfolio CRUD** (#1): put `Route::resource('projects', …)` behind `auth` (and ideally an admin gate). *Done when* a guest gets redirected from `/projects/create`, and a `POST /projects` from a guest is rejected.
-- [ ] **Close registration** (#2): disable `/register` or limit it to an allow-list.
-- [ ] **One auth stack** (#3): keep Breeze (`routes/auth.php`) and remove `Auth::routes()` and the laravel/ui controllers and views. *Done when* `php artisan route:cache` succeeds.
-- [ ] **Unique route names** (#4): rename the localized routes (`localized.home`, `localized.portfolio`, …) or drop the plain duplicates.
-- [ ] **Trim the portfolio resource** (#5): `Route::resource('portfolio', …)->only('index')`.
+- [x] **Protect portfolio CRUD** (#1): put `Route::resource('projects', …)` behind `auth` (and ideally an admin gate). *Done when* a guest gets redirected from `/projects/create`, and a `POST /projects` from a guest is rejected. Done 2026-11-25 with `auth` only; with registration closed, every user is an admin. There is no separate admin gate.
+- [x] **Close registration** (#2): `/register` removed (404). Users come from `php artisan user:create`. Done 2026-11-25.
+- [x] **One auth stack** (#3): keep Breeze (`routes/auth.php`) and remove `Auth::routes()` and the laravel/ui controllers and views. *Done when* `php artisan route:cache` succeeds. Done 2026-11-25: `composer remove laravel/ui`, Breeze login view restored; `route:cache` and `optimize` succeed.
+- [x] **Unique route names** (#4): dropped the plain duplicates (`/privacy-policy`, `/home` → redirects). Covered by a test. Done 2026-11-25.
+- [x] **Trim the portfolio resource** (#5): `Route::resource('portfolio', …)->only('index')`. Done 2026-11-25.
 - [ ] **Config, not `env()`** (#10, #11): add `services.google.tag_id` and `services.notion.*` to `config/services.php`, switch views and controllers to `config()`, and document the keys in `.env.example`.
 - [ ] **Guard global JS** (#16): `darkMode_button.js` should return early when `#check-dark-mode` is missing. Do the same for `menu_buton.js`.
 - [ ] **Track images** (#13): narrow the `*.png`/`*.jpg` ignore rule so `public/imgs` and the mesh textures get committed (or move them to storage or a CDN).
 - [ ] **CI on `main`** (#15): handled by the new `tests.yml` in Phase 0b.
-- [ ] **Fix the 2 failing auth tests**: login and registration redirect to `/home` (laravel/ui) instead of `/dashboard` (Breeze), and `/home` isn't a route. This resolves itself with "One auth stack".
+- [x] **Fix the 2 failing auth tests**: login and registration redirect to `/home` (laravel/ui) instead of `/dashboard` (Breeze), and `/home` isn't a route. Done 2026-11-25: login passes; the registration test was replaced by "registration is closed".
+- [ ] **Dependency advisories**: `composer` reported "61 security vulnerability advisories affecting 16 packages" (2026-11-25). Run `composer audit`, then update what can be updated within Laravel 10.
+- [ ] **`/dashboard` and `/profile` layout**: `<x-app-layout>` renders the site layout, which has `@yield('content')` but no `$slot`, so the Breeze content probably doesn't show. Either give them their own layout or redirect after login to `/projects` (`RouteServiceProvider::HOME`).
 - [ ] Remove dead pieces: the `/inWork` route and view (#7), `layouts/projects.blade.php` (#25), and the root `lang/` folder (#12) once its files are moved to `resources/lang/en`.
 - [x] **Local Docker environment**: `compose.yml` with app (PHP 8.3), node (Vite), MariaDB 11.4 and Mailpit, the same pattern as thelamb.studio-web. *Done when* `docker compose up -d` serves `http://localhost:8080` and `php artisan test` runs inside the container. Done 2026-11-23; see journal.
 
@@ -39,7 +41,7 @@ hostinger.yml: composer install --no-dev · npm ci && npm run build · rsync cod
 ```
 
 **Prerequisites**: these Phase 0 items block the deploy, because `artisan optimize` caches config and routes.
-- [ ] One auth stack and unique route names (#3, #4). `optimize` runs `route:cache`, which fails today.
+- [x] One auth stack and unique route names (#3, #4). `optimize` runs `route:cache`. Done 2026-11-25.
 - [ ] Config, not `env()` (#10). After `optimize`, `GOOGLE_TAG_ID` would be empty.
 - [ ] Track images (#13). The deploy uploads from a git checkout, so untracked `public/imgs/*` and mesh textures would be missing on the server.
 
@@ -92,7 +94,8 @@ hostinger.yml: composer install --no-dev · npm ci && npm run build · rsync cod
 - [ ] **Skills section**: fill the empty `#Skills` section from the `skills` table.
 - [ ] **"Let's work" / contact section**: fill `#letsWork` with a contact form (rate-limited, with a honeypot) or a mailto/Calendly link.
 - [ ] **Hero section**: the `#hero` section is empty, so decide what goes there or remove it.
-- [~] **Blog localization** (#8): merge `develop/multilang` (2 commits: `BlogPost`/`BlogCategories` models, localized blog routes). Then the language switcher works on `/blog`.
+- [x] **Blog localization** (#8): `/{locale}/blog/*` index, post, category, search and RSS feed all work, and the language switcher keeps the page. Done 2026-11-25 (fixes #27–#30). The `BlogPost`/`BlogCategories` models from `develop/multilang` were removed, because binshops never reads the `blog_post_model` config key; `URL::defaults` does their job.
+- [ ] **Translate blog content**: posts have a single language. Showing an `es` version of a post needs a translation model (binshops has no translation support), or a `locale` column and a filter.
 - [ ] **Language switcher everywhere**: show it in the mobile menu too (today it is desktop-only), and keep the current path when switching.
 - [ ] **Translate the remaining UI**: project CRUD views (currently hard-coded Spanish), blog chrome and privacy policy.
 - [ ] **Real social links** (#24): replace the placeholders in the navbar and footer JSON-LD with config values.
@@ -123,6 +126,6 @@ hostinger.yml: composer install --no-dev · npm ci && npm run build · rsync cod
 
 ## Ideas (not committed)
 
-- RSS link in the footer (binshops already serves `/blog/feed`).
+- RSS link in the footer (`/blog/feed` and `/{locale}/blog/feed` work, served by `BlogFeedController`).
 - A "now" or changelog page generated from `journal.md`.
 - Interactive squids that react to the cursor (Yuka `SeekBehavior` / `FleeBehavior`).

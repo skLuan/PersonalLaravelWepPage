@@ -8,9 +8,6 @@ return [
     //Change it to \App\Models\User::class for laravel 8.x's default auth User model
     'user_model'=>\App\Models\User::class,
 
-    // Custom BlogPost model to override URL generation
-    'blog_post_model' => \App\Models\BlogPost::class,
-    'blog_category_model' => \App\Models\BlogCategories::class,
 
     // reading progress bar is the bar which shows on top of your post when you are scrolling down the page. You can disable this feature if you want
     'reading_progress_bar' => true,

@@ -2,7 +2,7 @@
     /**
      * @var \BinshopsBlog\Models\BinshopsBlogPost $post
      */
-    $url = config('binshopsblog.blog_prefix') . '/' . $post->slug;
+    $url = $post->url(); // absolute, keeps the current locale
 @endphp
 <div class="px-2 lg:my-12 bg-skl-black-50">
     <div class="blog-item border-l border-skl-grey rounded-sm shadow-lg shadow-skl-grey">

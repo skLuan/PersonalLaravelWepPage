@@ -29,6 +29,48 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-25: Blog localization fixes and auth cleanup
+
+**Branch:** `fix/blog-locale-auth` (from `develop/blog` at `1764524`, git worktree at `../PersonalLaravelWepPage-wt/blog-locale-auth`) · **Goal:** fix #27–#30 and do the Phase 0 auth cleanup (#1–#5, #26).
+
+### Done
+- **#27 `/es/blog` 404**: confirmed the cause. `BinshopsBlogReaderController@index($category_slug)` received `es`. `SetLocale` now calls `$request->route()->forgetParameter('locale')` and sets `URL::defaults(['locale' => …])`.
+- **#28 search 500**: fixed by the same `URL::defaults`, because `route('binshopsblog.search')` now gets the locale. Before the fix, `/blog/search` (unprefixed) also returned 500.
+- **#29 feed 500**: new `BlogFeedController` + `resources/views/feed/rss.blade.php` (RSS 2.0, published posts only, `<language>` = current locale). It replaces binshops' controller, which needs `laravelium/feed`; that package is archived and its latest version requires PHP ^8.3.
+- **#30 language switcher**: it only adds the prefix when the localized path matches a route. Otherwise (`/projects`, `/login`) it redirects to the same path. It also keeps the query string, and it no longer treats `/essay` as starting with the `es` prefix.
+- New bug found and fixed: `partials/index_loop.blade.php` built post links as the relative `blog/<slug>`, which breaks on category pages (`/es/blog/category/x` → `/es/blog/category/blog/<slug>`). It now uses `$post->url()`.
+- Removed `App\Models\BlogPost` and `BlogCategories` and their config keys. I grepped `vendor/binshops`: nothing reads `blog_post_model` or `blog_category_model`, so these models were never used.
+- **Auth (#1–#3, #26)**: ran `composer remove laravel/ui`, deleted `Auth::routes()`, the 6 laravel/ui controllers, `auth/verify`, `auth/passwords/*` and `HomeController`. `auth/login.blade.php` was laravel/ui's Bootstrap view and has been replaced by Breeze's stub. Removed `/register` and `RegisteredUserController`. Added `php artisan user:create <email>`. Put `/projects` behind `auth`.
+- **Routes (#4, #5)**: `/home` and `/{locale}/home` now redirect to `/` and `/{locale}`. Removed the duplicate plain `/privacy-policy`, because the fallback group serves it. The portfolio resource is now `->only('index')`.
+- Tests: added `BlogLocaleTest` (11) and `AccessControlTest` (7), and removed `RegistrationTest`.
+- Docs: `plan.md` (ticked items, added new ones), `architecture.md`, `development.md`, `CLAUDE.md`.
+
+### ✅ Works (verified)
+- `php artisan test`: **40 passed** (116 assertions), in the worktree container.
+- `php artisan route:cache` and `php artisan optimize` succeed, with 78 routes and no duplicate names.
+- Over HTTP on the worktree server (:8090), with routes cached:
+  - 200: `/`, `/es`, `/blog`, `/es/blog`, `/en/blog`, `/es/blog/search?s=a`, `/blog/feed`, `/es/blog/feed`, `/portfolio`, `/es/portfolio`, `/privacy-policy`, `/es/privacy-policy`, `/login`, `/forgot-password`.
+  - 302: `/home` → `/`, `/es/home` → `/es`. `/projects`, `/projects/create` and `/dashboard` → `/login`.
+  - 404: `/register`, `/es/portfolio/1`.
+  - 401: `/blog_admin` (guest).
+- The feed output starts with `<?xml` (no leading whitespace) and links to `/es/blog`.
+
+### ❌ Broken / not working
+- `composer` reports **61 security advisories in 16 packages** (it was already like this; added to the plan).
+- `/dashboard` and `/profile` use `<x-app-layout>` → `layouts/app.blade.php`, which has `@yield('content')` and no `$slot`. Reading the code, the Breeze content likely doesn't render. I did not check this in a browser.
+
+### ❔ Not verified
+- Nothing has been checked in a real browser: login form styling (Breeze view on the guest layout), the 3D canvas on blog pages, the language switcher click.
+- The dev DB is still empty, so posts, categories and the feed were only tested with test data in the `testing` DB.
+- The blog admin login: no user exists yet. `canManageBinshopsBlogPosts()` requires `id === 1` and a fixed email. Running `php artisan user:create <that email>` on an empty `users` table should satisfy that check (not tried).
+
+### Next
+- Merge `fix/blog-locale-auth` into `develop/blog`, then run `git worktree remove` and remove the `luane-wt-app` container and `luane_wt_vendor` volume.
+- On the main stack after the merge: `docker compose exec app composer install` (laravel/ui is gone from the lock file).
+- Fix the dashboard and profile layout, or set `RouteServiceProvider::HOME = '/projects'`.
+
+---
+
 ## 2026-11-24: Docker local environment and deployment plan
 
 **Branch:** `develop/blog` (after merge `58ddd15`) · **Goal:** add `compose.yml`, start the local stack, and plan GitHub Actions deployment based on `skLuan/thelamb.studio-web`.

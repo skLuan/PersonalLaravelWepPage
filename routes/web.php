@@ -1,16 +1,12 @@
 <?php
 
-use App\Http\Controllers\CurriculumVitae;
+use App\Http\Controllers\BlogFeedController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
-use App\Providers\NotionService;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\App;
-use App\Http\Controllers\HomeController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,9 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/privacy-policy', function () {
-    return view('privacy-policy');
-})->name('privacy-policy');
+// /privacy-policy itself is served by the fallback group below.
 Route::redirect('/privacy', '/privacy-policy');
 Route::redirect('/privacypolicy', '/privacy-policy');
 Route::redirect('/privacypol', '/privacy-policy');
@@ -66,10 +60,8 @@ Route::redirect('/privac', '/privacy-policy');
 Route::redirect('/policy', '/privacy-policy');
 Route::redirect('/pp', '/privacy-policy');
 
-Auth::routes();
-
-
-Route::resource('projects', ProjectController::class);
+// Portfolio admin. Registration is closed, so every user is an admin.
+Route::resource('projects', ProjectController::class)->middleware('auth');
 
 $availableLocales = config('app.available_locales', ['en']);
 
@@ -80,21 +72,15 @@ Route::prefix('{locale}')
     ->group(function () use ($availableLocales) {
 
     // Home routes
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/', function () {
         return view('home');
     })->name('home');
+    Route::get('/home', fn () => redirect()->route('home'));
 
     // Portfolio routes
-    Route::resource('portfolio', PortfolioController::class)->names([
-        'index' => 'portfolio',
-        'show' => 'portfolio.show',
-        'create' => 'portfolio.create',
-        'store' => 'portfolio.store',
-        'edit' => 'portfolio.edit',
-        'update' => 'portfolio.update',
-        'destroy' => 'portfolio.destroy',
-    ]);
+    Route::resource('portfolio', PortfolioController::class)
+        ->only('index')
+        ->names(['index' => 'portfolio']);
 
     // Blog routes (BinshopsBlog package) - manually defined to work with locale
     Route::group(['prefix' => 'blog'], function () {
@@ -104,7 +90,7 @@ Route::prefix('{locale}')
         Route::get('/search', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@search')
             ->name('binshopsblog.search');
 
-        Route::get('/feed', 'BinshopsBlog\Controllers\BinshopsBlogRssFeedController@feed')
+        Route::get('/feed', BlogFeedController::class)
             ->name('binshopsblog.feed');
 
         Route::get('/category{subcategories}', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@view_category')
@@ -130,20 +116,14 @@ Route::prefix('{locale}')
 
 // Fallback routes for default locale (English)
 Route::middleware(['setlocale'])->group(function () {
-    Route::get('/home', [HomeController::class, 'index'])->name('home.fallback');
     Route::get('/', function () {
         return view('home');
     })->name('home.fallback');
+    Route::redirect('/home', '/');
 
-    Route::resource('portfolio', PortfolioController::class)->names([
-        'index' => 'portfolio.fallback',
-        'show' => 'portfolio.show.fallback',
-        'create' => 'portfolio.create.fallback',
-        'store' => 'portfolio.store.fallback',
-        'edit' => 'portfolio.edit.fallback',
-        'update' => 'portfolio.update.fallback',
-        'destroy' => 'portfolio.destroy.fallback',
-    ]);
+    Route::resource('portfolio', PortfolioController::class)
+        ->only('index')
+        ->names(['index' => 'portfolio.fallback']);
 
     // Blog routes (BinshopsBlog package) - manually defined for fallback
     Route::group(['prefix' => 'blog'], function () {
@@ -153,7 +133,7 @@ Route::middleware(['setlocale'])->group(function () {
         Route::get('/search', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@search')
             ->name('binshopsblog.search.fallback');
 
-        Route::get('/feed', 'BinshopsBlog\Controllers\BinshopsBlogRssFeedController@feed')
+        Route::get('/feed', BlogFeedController::class)
             ->name('binshopsblog.feed.fallback');
 
         Route::get('/category{subcategories}', 'BinshopsBlog\Controllers\BinshopsBlogReaderController@view_category')
@@ -256,22 +236,25 @@ Route::get('/locale/{locale}', function ($locale) {
     session(['locale' => $locale]);
 
     // Redirect back to the same page with new locale
-    $previousUrl = url()->previous();
-    $parsedUrl = parse_url($previousUrl);
-
-    // If URL already has a locale prefix, replace it
+    $parsedUrl = parse_url(url()->previous());
     $path = $parsedUrl['path'] ?? '/';
-    foreach ($availableLocales as $availableLocale) {
-        if (str_starts_with($path, '/' . $availableLocale)) {
-            $path = substr($path, strlen('/' . $availableLocale));
-            break;
-        }
+    $query = isset($parsedUrl['query']) ? '?' . $parsedUrl['query'] : '';
+
+    // Strip an existing locale prefix ("/es/blog" → "/blog", but not "/essay")
+    $localePattern = '#^/(' . implode('|', array_map('preg_quote', $availableLocales)) . ')(?=/|$)#';
+    $path = preg_replace($localePattern, '', $path) ?: '/';
+
+    $newPath = rtrim('/' . $locale . $path, '/');
+
+    // Pages without a localized version (/projects, /login, …) keep their URL;
+    // the session locale set above still applies.
+    try {
+        Route::getRoutes()->match(Request::create($newPath));
+    } catch (HttpException) {
+        return redirect($path . $query);
     }
 
-    // Add new locale prefix
-    $newPath = '/' . $locale . $path;
-
-    return redirect($newPath);
+    return redirect($newPath . $query);
 })->name('locale.switch')->where(['locale' => implode('|', $availableLocales)]);
 // Route::get('/blog', function () {
 //     return view('vendor.binshopsblog.index');

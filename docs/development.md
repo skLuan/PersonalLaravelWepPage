@@ -99,7 +99,8 @@ php artisan serve --port=8080    # app on http://localhost:8080
 | Portfolio | `/portfolio`, `/es/portfolio` |
 | Blog | `/blog` |
 | Blog admin | `/blog_admin` (logged-in user who passes `canManageBinshopsBlogPosts()`) |
-| Project CRUD | `/projects` |
+| Project CRUD | `/projects` (login required) |
+| Login | `/login`. There is no `/register`; create a user with `php artisan user:create you@example.com` (asks for the password) |
 | Privacy | `/privacy-policy` |
 
 ## Common tasks
@@ -124,7 +125,9 @@ docker compose exec app php artisan test     # Docker: the `testing` DB is creat
 php artisan test                             # native: create a `testing` database yourself
 ```
 
-`phpunit.xml` uses `DB_DATABASE=testing` on the `.env` connection. Only the Breeze auth/profile tests and the skeleton example tests exist; there is no coverage of the site's own pages yet. Status on 2026-11-23: **23 passed, 2 failed**. Both failures are the laravel/ui vs Breeze redirect conflict (journal #3).
+`phpunit.xml` uses `DB_DATABASE=testing` on the `.env` connection. Besides the Breeze auth/profile tests, `tests/Feature/BlogLocaleTest.php` covers the blog in every locale (index, post, category, search, RSS, language switcher) and `tests/Feature/AccessControlTest.php` covers closed registration, `/projects` auth, unique route names and `user:create`. Status on 2026-11-25: **40 passed**.
+
+Two checkouts running tests at the same time (for example a git worktree plus the main stack) share the `testing` database, and `RefreshDatabase` in one will break the other. Run them one at a time.
 
 ## Building for production
 
@@ -133,7 +136,7 @@ composer install --no-dev --optimize-autoloader
 npm ci && npm run build          # → public/build (gitignored, so build on deploy)
 php artisan migrate --force
 php artisan config:cache
-php artisan route:cache          # ⚠ currently fails: duplicate auth route names (journal #3)
+php artisan route:cache          # works since 2026-11-25 (one auth stack, unique route names)
 php artisan view:cache
 ```
 

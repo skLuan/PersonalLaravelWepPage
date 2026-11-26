@@ -45,7 +45,8 @@ Deployment isn't built yet. The plan is GitHub Actions → Hostinger over SSH, c
 | Area | Location |
 |---|---|
 | Routes | `routes/web.php` (public + localized), `routes/auth.php` (Breeze) |
-| Controllers | `app/Http/Controllers/` (`PortfolioController`, `ProjectController`, `HomeController`, legacy `CurriculumVitae`) |
+| Controllers | `app/Http/Controllers/` (`PortfolioController`, `ProjectController`, `BlogFeedController`, Breeze `Auth/*`, legacy `CurriculumVitae`) |
+| Commands | `php artisan user:create <email>`, the only way to add a user (registration is closed) |
 | Locale | `app/Http/Middleware/SetLocale.php` (alias `setlocale`), `config/app.php` → `available_locales` |
 | Translations | `resources/lang/{en,es}/messages.php`, `portfolio.php`. **Not** the root `lang/` folder (see gotchas) |
 | Layout | `resources/views/layouts/app.blade.php`. Every page extends it. It loads GA + Clarity |
@@ -64,15 +65,15 @@ Deployment isn't built yet. The plan is GitHub Actions → Hostinger over SSH, c
 - **Commits:** conventional commits (`feat(i18n): …`, `fix(...)`, `docs: …`). The active branch is `develop/blog`; PRs target `main`.
 - Existing code comments are often in Spanish. Either language is fine; keep new comments short.
 
-## Gotchas (verified 2026-11-23)
+## Gotchas (verified 2026-11-25)
 
-- `php artisan route:cache` **fails**: `password.request` and other route names are defined twice, because both Breeze (`routes/auth.php`) and laravel/ui (`Auth::routes()`) are registered. The production Docker entrypoint runs `route:cache`, so it will crash.
-- `/projects` CRUD and `/register` are **public** (no auth middleware).
+- **Route names must stay unique**, or `route:cache` / `optimize` (which the deploy runs) fail. `AccessControlTest::test_route_names_are_unique` catches this. Localized routes use the plain name (`home`, `portfolio`, `binshopsblog.index`); the unprefixed copies end in `.fallback`.
+- `SetLocale` removes `{locale}` from the route parameters, so controllers inside the `{locale}` group **can't** take a `$locale` argument. Use `app()->getLocale()` instead. `route()` fills in `locale` from `URL::defaults`.
 - `env()` is called directly in Blade views and controllers (`GOOGLE_TAG_ID`, `NOTION_*`). After `config:cache` these return `null`. Read them through `config()` instead.
 - Root `lang/` is ignored, because Laravel 10 prefers `resources/lang/` when it exists.
 - `darkMode_button.js` runs on every page but the toggle only exists on single blog posts. Every other page throws a `TypeError` and never reaches `Alpine.start()`.
 - `.gitignore` excludes `*.png` and `*.jpg`, so `public/imgs/*` (profile photo, hero) is not in git.
-- 2 Breeze tests fail (login and registration redirect to `/home`) because laravel/ui's controllers override Breeze's. `/home` only exists as `/{locale}/home`.
+- `/dashboard` and `/profile` use `<x-app-layout>`, which renders `layouts/app.blade.php`. That layout uses `@yield('content')`, not `$slot`, so the Breeze page content is probably not shown (not checked in a browser).
 - Blog uploads go to `public/blog_images/`, which is untracked. Any deploy that syncs `public/` with `--delete` must exclude it.
 
 The full list, with status, is in `journal.md`.
