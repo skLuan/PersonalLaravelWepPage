@@ -103,12 +103,43 @@ php artisan view:cache
 
 ## Deployment
 
-> The deployment target and process are **not recorded in the repo**. The `docker/` folder suggests a `laravel-fans/docker` Apache image, but there is no Dockerfile or compose file. Document the real process here (host, how assets are built, how `.env` is provided, how migrations run).
+Production is **Hostinger shared hosting** (hPanel, PHP 8.2) at <https://luane.online>. Deploys run from GitHub Actions: [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml).
+
+**Trigger:** every push to `main`, or by hand from *Actions → Deploy to Hostinger → Run workflow*.
+
+**What the workflow does:**
+1. Installs Composer deps with `--no-dev --optimize-autoloader` and runs `npm ci && npm run build` on the runner (the server does not need Node).
+2. Connects over SSH, runs `php artisan down`.
+3. `rsync --delete` the build to `HOSTINGER_DEPLOY_PATH`. It **never touches** `.env`, `storage/`, `bootstrap/cache/*.php`, `public/storage`, `public/imgs/`, `public/blog_images/`, any `.htaccess`, `error_log`, `.well-known/`, and it never deletes `*.png/*.jpg/*.jpeg/*.webp` on the server (they are gitignored).
+4. `migrate --force`, `optimize:clear`, `config:cache`, `view:cache`, `storage:link` if missing. `route:cache` is skipped until journal #3 is fixed.
+5. `php artisan up` (always, even if a step failed), then checks that `https://luane.online/` returns 200.
+
+**GitHub configuration** (*Settings → Secrets and variables → Actions*):
+
+| Name | Type | Example |
+|---|---|---|
+| `HOSTINGER_SSH_HOST` | secret | IP shown in hPanel → Advanced → SSH Access |
+| `HOSTINGER_SSH_PORT` | secret | `65002` |
+| `HOSTINGER_SSH_USER` | secret | `u123456789` |
+| `HOSTINGER_SSH_KEY` | secret | private key (whole file, including the `BEGIN`/`END` lines) |
+| `HOSTINGER_DEPLOY_PATH` | secret | absolute path of the Laravel root (the folder with `artisan`), e.g. `/home/u123456789/domains/luane.online/laravel` |
+| `HOSTINGER_PHP_BIN` | variable (optional) | PHP CLI on the server if `php` is not 8.2, e.g. `/opt/alt/php82/usr/bin/php` |
+
+The job uses the `production` environment, so you can add a required reviewer there if you want a manual approval step.
+
+**One-time setup:**
+```bash
+ssh-keygen -t ed25519 -C "github-actions@luane.online" -f hostinger_deploy -N ""
+# hostinger_deploy.pub → hPanel → Advanced → SSH Access → SSH keys → Add
+# hostinger_deploy     → GitHub secret HOSTINGER_SSH_KEY
+ssh -p 65002 u123456789@HOST 'cd domains/luane.online && ls -la && find . -maxdepth 3 -name artisan'
+```
+The last command shows where the app lives. Use the folder that contains `artisan` as `HOSTINGER_DEPLOY_PATH`. The server `.env` must already have `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://luane.online`, the `DB_*` values and `GOOGLE_TAG_ID`.
 
 Production checklist:
 - `APP_ENV=production`, `APP_DEBUG=false`, and `APP_URL` set to the real domain.
-- `GOOGLE_TAG_ID` set. After moving it to `config/services.php`, it survives `config:cache`; today it doesn't (journal #10).
-- `public/imgs/*` and the mesh textures are present on the server.
+- `GOOGLE_TAG_ID` set (read through `config('services.google.tag_id')`, so it survives `config:cache`).
+- `public/imgs/*` and the mesh textures are present on the server (not in git; the deploy leaves them alone).
 - `storage/` and `bootstrap/cache/` are writable by the web user.
 
 ## Branches

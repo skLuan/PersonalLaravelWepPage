@@ -14,13 +14,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GOOGLE_TAG_ID') }}"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google.tag_id') }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', '{{ env('GOOGLE_TAG_ID') }}');
+  gtag('config', '{{ config('services.google.tag_id') }}');
 </script>
 <body style="height: 100vh" class="antialiased bg-black py-8">
     <x-three-canvas />

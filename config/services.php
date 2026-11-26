@@ -31,4 +31,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'google' => [
+        'tag_id' => env('GOOGLE_TAG_ID'),
+    ],
+
+    'notion' => [
+        'token' => env('NOTION_API_TOKEN'),
+        'curriculum_vitae_id' => env('NOTION_CURRICULUM_VITAE_ID'),
+    ],
+
 ];

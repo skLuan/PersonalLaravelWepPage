@@ -25,7 +25,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ env('GOOGLE_TAG_ID') }}"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google.tag_id') }}"></script>
 <script>
     window.dataLayer = window.dataLayer || [];
 
@@ -34,7 +34,7 @@
     }
     gtag('js', new Date());
 
-    gtag('config', '{{ env('GOOGLE_TAG_ID') }}');
+    gtag('config', '{{ config('services.google.tag_id') }}');
 </script>
 
 <body class="antialiased bg-skl-black font-skl-nunito">

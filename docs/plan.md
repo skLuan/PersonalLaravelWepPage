@@ -14,7 +14,7 @@ The site has open write endpoints and won't boot in a production container. Fix 
 - [ ] **One auth stack** (#3): keep Breeze (`routes/auth.php`) and remove `Auth::routes()` and the laravel/ui controllers and views. *Done when* `php artisan route:cache` succeeds.
 - [ ] **Unique route names** (#4): rename the localized routes (`localized.home`, `localized.portfolio`, …) or drop the plain duplicates.
 - [ ] **Trim the portfolio resource** (#5): `Route::resource('portfolio', …)->only('index')`.
-- [ ] **Config, not `env()`** (#10, #11): add `services.google.tag_id` and `services.notion.*` to `config/services.php`, switch views and controllers to `config()`, and document the keys in `.env.example`.
+- [x] **Config, not `env()`** (#10, #11): add `services.google.tag_id` and `services.notion.*` to `config/services.php`, switch views and controllers to `config()`, and document the keys in `.env.example`.
 - [ ] **Guard global JS** (#16): `darkMode_button.js` should return early when `#check-dark-mode` is missing. Do the same for `menu_buton.js`.
 - [ ] **Track images** (#13): narrow the `*.png`/`*.jpg` ignore rule so `public/imgs` and the mesh textures get committed (or move them to storage or a CDN).
 - [ ] **CI on `main`** (#15): change the `tests.yml` branches, and use SQLite in-memory for tests so CI doesn't need MySQL.
@@ -49,7 +49,9 @@ The site has open write endpoints and won't boot in a production container. Fix 
 ## Phase 3: Content and operations
 
 - [ ] **Tests**: feature tests for the public pages (home, portfolio, blog index, privacy) in both locales, project CRUD authorization, and the locale switcher.
-- [ ] **Deployment docs**: write down the real deploy target and steps in `docs/development.md`, and add a Dockerfile and compose file if Docker is the target.
+- [x] **Deployment docs**: Hostinger over SSH via GitHub Actions (`.github/workflows/deploy.yml`), documented in `docs/development.md`.
+- [ ] **Fix `route:cache`** (#3) and add it back to the deploy workflow.
+- [ ] **Run tests before deploy**: give `tests.yml` a MySQL service and make the deploy depend on it.
 - [ ] **Decide on Notion**: either delete `CurriculumVitae`, `NotionService`, `blog.blade.php` and `blogpost.blade.php`, or bring back a Notion-powered CV page on top of config-based IDs.
 - [ ] **CV page**: a downloadable or online CV (there is a commented-out link in the legacy `inWork` view).
 - [ ] **Analytics consent**: a cookie or consent banner for GA and Clarity, in line with the privacy policy text.

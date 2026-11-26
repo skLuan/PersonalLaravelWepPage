@@ -13,8 +13,8 @@ class NotionService extends ServiceProvider
     public function __construct()
     {
 
-        $this->token = env('NOTION_API_TOKEN');
-        $this->databaseId = env('NOTION_CURRICULUM_VITAE_ID');
+        $this->token = config('services.notion.token');
+        $this->databaseId = config('services.notion.curriculum_vitae_id');
     }
     /**
      * Register services.

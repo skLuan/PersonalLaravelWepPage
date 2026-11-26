@@ -29,6 +29,32 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-25: GitHub Actions deploy to Hostinger
+
+**Branch:** `ci/deploy-hostinger` · **Goal:** deploy `main` to luane.online automatically.
+
+### Done
+- Added `.github/workflows/deploy.yml`: build in CI (Composer no-dev + Vite), rsync over SSH, migrate, cache, smoke test.
+- Fixed #10/#11: `GOOGLE_TAG_ID` and `NOTION_*` now go through `config/services.php`; keys added to `.env.example`.
+- Documented the deploy in `docs/development.md`.
+
+### ✅ Works (verified)
+- `https://luane.online` answers 200 from Hostinger (`platform: hostinger`, `x-powered-by: PHP/8.2`).
+- Workflow passes `actionlint` and YAML parsing.
+- No `env()` calls left outside `config/` (`rg "env\(" app resources routes`).
+
+### ❌ Broken / not working
+- `route:cache` still fails (#3), so the workflow skips it.
+
+### ❔ Not verified
+- The real server path, SSH user and whether `php` on the server CLI is 8.2. The workflow has not run yet because the secrets are not set.
+- PHP was not available in the session, so the config changes were not run through `php -l` (CI will).
+
+### Next
+- Set the `HOSTINGER_*` secrets, merge to `main`, watch the first run.
+
+---
+
 ## 2026-11-23: Full project read-through and documentation
 
 **Branch:** `develop/blog` · **Goal:** read the whole project and its git history, then write the project docs.
