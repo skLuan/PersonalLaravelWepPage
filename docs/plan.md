@@ -14,78 +14,62 @@ The site has open write endpoints and won't boot in a production container. Fix 
 - [x] **One auth stack** (#3): keep Breeze (`routes/auth.php`) and remove `Auth::routes()` and the laravel/ui controllers and views. *Done when* `php artisan route:cache` succeeds. Done 2026-11-25: `composer remove laravel/ui`, Breeze login view restored; `route:cache` and `optimize` succeed.
 - [x] **Unique route names** (#4): dropped the plain duplicates (`/privacy-policy`, `/home` → redirects). Covered by a test. Done 2026-11-25.
 - [x] **Trim the portfolio resource** (#5): `Route::resource('portfolio', …)->only('index')`. Done 2026-11-25.
-- [ ] **Config, not `env()`** (#10, #11): add `services.google.tag_id` and `services.notion.*` to `config/services.php`, switch views and controllers to `config()`, and document the keys in `.env.example`.
+- [x] **Config, not `env()`** (#10, #11): add `services.google.tag_id` and `services.notion.*` to `config/services.php`, switch views and controllers to `config()`, and document the keys in `.env.example`. Done 2026-11-25 on `ci/deploy-hostinger` (merged into `main`, PR #9).
 - [ ] **Guard global JS** (#16): `darkMode_button.js` should return early when `#check-dark-mode` is missing. Do the same for `menu_buton.js`.
 - [ ] **Track images** (#13): narrow the `*.png`/`*.jpg` ignore rule so `public/imgs` and the mesh textures get committed (or move them to storage or a CDN).
-- [ ] **CI on `main`** (#15): handled by the new `tests.yml` in Phase 0b.
+- [x] **CI on `main`** (#15): `tests.yml` now runs on pushes to `main` and `develop/**`, on PRs, and from `deploy.yml`. Done 2026-11-26.
 - [x] **Fix the 2 failing auth tests**: login and registration redirect to `/home` (laravel/ui) instead of `/dashboard` (Breeze), and `/home` isn't a route. Done 2026-11-25: login passes; the registration test was replaced by "registration is closed".
 - [x] **Dependency advisories**: done 2026-11-26 by the Laravel 12 upgrade; `composer` now reports "No security vulnerability advisories found".
 - [ ] **`/dashboard` and `/profile` layout**: `<x-app-layout>` renders the site layout, which has `@yield('content')` but no `$slot`, so the Breeze content probably doesn't show. Either give them their own layout or redirect after login to `/projects` (`RouteServiceProvider::HOME`).
 - [ ] Remove dead pieces: the `/inWork` route and view (#7) and the root `lang/` folder (#12) once its files are moved to `resources/lang/en`. (`layouts/projects.blade.php` #25 was removed 2026-11-26.)
 - [x] **Local Docker environment**: `compose.yml` with app (PHP 8.3), node (Vite), MariaDB 11.4 and Mailpit, the same pattern as thelamb.studio-web. *Done when* `docker compose up -d` serves `http://localhost:8080` and `php artisan test` runs inside the container. Done 2026-11-23; see journal.
 
-### Phase 0b: Deploy with GitHub Actions (Hostinger, modelled on thelamb.studio-web)
+### Phase 0b: Deploy with GitHub Actions (Hostinger)
 
-Reference: [`skLuan/thelamb.studio-web`](https://github.com/skLuan/thelamb.studio-web) → `.github/workflows/{tests,deploy,hostinger}.yml`, `scripts/hostinger/link-docroot.sh` and `docs/despliegue.md`. Hostinger shared hosting has PHP and MariaDB over SSH but **no Node**, so GitHub Actions builds everything and uploads files that are ready to run.
+Hostinger shared hosting has PHP and MariaDB over SSH but **no Node**, so GitHub Actions builds everything and uploads files that are ready to run. Reference for the staging/tag extension: [`skLuan/thelamb.studio-web`](https://github.com/skLuan/thelamb.studio-web) (`.github/workflows/{tests,deploy,hostinger}.yml`, `docs/despliegue.md`).
 
-**Target flow**
+**Current flow** (production only; see `docs/development.md` → Deployment)
 
 ```
-push to main ─┐                             ┌─▶ staging    (e.g. https://testing.luane.online)
-tag v*  ──────┼─▶ tests.yml ─▶ deploy.yml ──┤
-Run workflow ─┘                             └─▶ production (https://luane.online)
-
-hostinger.yml: composer install --no-dev · npm ci && npm run build · rsync code → app folder
-               check server .env · artisan down · migrate --force · optimize · storage link
-               link-docroot.sh (public/ → public_html) · artisan up · curl smoke test
+push to main ─┐
+Run workflow ─┴─▶ deploy.yml: tests (tests.yml, PHP 8.4 + MariaDB) ─▶ build (composer --no-dev, npm run build)
+                 ─▶ check layout + server PHP ─▶ artisan down ─▶ rsync ─▶ drop bootstrap/cache/*.php
+                 ─▶ migrate --force ─▶ optimize ─▶ public/storage (ln) ─▶ artisan up ─▶ smoke test
 ```
 
-**Prerequisites**: these Phase 0 items block the deploy, because `artisan optimize` caches config and routes.
-- [x] One auth stack and unique route names (#3, #4). `optimize` runs `route:cache`. Done 2026-11-25.
-- [ ] Config, not `env()` (#10). After `optimize`, `GOOGLE_TAG_ID` would be empty.
-- [ ] Track images (#13). The deploy uploads from a git checkout, so untracked `public/imgs/*` and mesh textures would be missing on the server.
+Server layout: `~/domains/luane.online` is the Laravel root and `public_html -> public` (set once with `scripts/hostinger/migrate-layout.sh`).
 
-**Workflows** (copy from the reference and adapt):
-- [ ] `tests.yml`: triggers on `pull_request` + `workflow_call`; PHP 8.4, `composer install`, `npm ci && npm run build`, optional `pint --test`, `php artisan test`. Tests need a database: use a MariaDB service container (the binshops fulltext migration may not run on SQLite), or check whether SQLite works. This replaces the Laravel skeleton workflows (`issues.yml`, `pull-requests.yml`, `update-changelog.yml`) and fixes #15.
-- [ ] `deploy.yml`: push to `main` → staging; tag `v*` → production; `workflow_dispatch` with an environment choice. Every path runs `tests.yml` first.
-- [ ] `hostinger.yml` (reusable, `workflow_call` with `environment`):
-  - Validate the environment variables `HOSTINGER_DOCROOT` and `SITE_URL`. They are *variables*, not secrets, or `vars.` reads them as empty.
-  - Normalize the SSH key (strip CRLF) and validate it with `ssh-keygen -y` before connecting.
-  - Filament assets are gitignored: `composer install` regenerates them (`filament:upgrade`), so do not exclude `public/js/filament`, `public/css/filament` or `public/fonts/filament` from rsync.
-  - Run `rsync -az --delete`, excluding `.git/`, `.github/`, `node_modules/`, `docker/`, `compose.yml`, `tests/`, `docs/`, `*.md`, `.env`, `storage/`, `public/storage`, `public/hot`, `bootstrap/cache/*.php` **and `public/blog_images/`**. Blog uploads live there (the `blog` disk in `config/filesystems.php`), and `--delete` would wipe them. A better long-term fix is to move the uploads under `storage/app/public`.
-  - Over SSH, run with `set -euo pipefail`:
-    - fail if `.env` is missing, `APP_KEY` is empty or `APP_DEBUG=true`;
-    - `config:clear` → `down` (with a `trap … up` so the site always comes back) → `migrate --force` → `optimize`;
-    - create the `public/storage` link with `ln -s` (Hostinger disables PHP `symlink()`, so `artisan storage:link` fails);
-    - run `link-docroot.sh`.
-  - Smoke test with `curl -fsS` on `SITE_URL/`, `/portfolio` and `/blog`. Laravel 10 has no `/up` route: add one (`Route::get('/up', fn () => response('ok'))`) or drop that check.
-- [ ] `scripts/hostinger/link-docroot.sh`: copy it from the reference and change the marker to `# luane:managed-by-deploy`. It links each `public/` entry into the docroot, keeps `.well-known`, `cgi-bin` and the staging folder, and moves whatever else was there to `storage/app/docroot-backup/<date>/`.
+**Prerequisites**
+- [x] One auth stack and unique route names (#3, #4). `optimize` runs `route:cache`. Done 2026-11-25, re-checked 2026-11-26 on Laravel 12 (62 routes, no duplicate names).
+- [x] Config, not `env()` (#10). Done 2026-11-25.
+- [ ] Track images (#13). The deploy uploads from a git checkout; rsync protects `public/imgs/` and image files already on the server, but a fresh server would miss them.
 
-**Hostinger (one-time, per environment)**
-- [ ] Confirm where `luane.online` is hosted. If it's the same Hostinger account as thelamb.studio, you can reuse the SSH access, but give this repo its own deploy key so it can be revoked alone.
-- [ ] Set PHP 8.3 in hPanel and confirm the `gd`, `intl`, `zip`, `bcmath`, `exif` and `fileinfo` extensions are enabled.
-- [ ] Create the staging subdomain (`testing.luane.online`, inside `public_html`) with SSL.
-- [ ] Give each environment its own MariaDB database. Never share production's.
-- [ ] Put the app folders **outside** `public_html` (`~/domains/luane.online/laravel` and `…/staging`), each with its own `.env`:
-  - `APP_ENV`, `APP_DEBUG=false`, `APP_URL`, `APP_KEY` (from `key:generate --force`);
-  - `DB_HOST=localhost`;
-  - `GOOGLE_TAG_ID`;
-  - wrap passwords in single quotes.
-- [ ] Add a cron entry every minute: `cd <app> && php artisan schedule:run`. Use `/opt/alt/php83/usr/bin/php` if `php -v` over SSH isn't 8.3.
-- [ ] Copy existing production content into the new database: blog posts, projects, `public/blog_images`.
-- [ ] Back up the current `public_html` before the first production deploy (`cp -a public_html ~/public_html.backup-$(date +%F)`).
+**Workflows**
+- [x] `deploy.yml`: push to `main` + `workflow_dispatch` → production, layout check, rsync, migrate, smoke test and "nothing outside `public/` is reachable" check. Done 2026-11-25 (PR #9).
+- [x] PHP 8.4 in CI, the dev image and the server (hPanel shows 8.4.28). `nette/utils` 4.1.6 and `nette/schema` 1.4.0 in the Laravel 12 lock support up to 8.6. Done 2026-11-26.
+- [x] Run the tests before every deploy: `tests.yml` is `workflow_call`-able with a MariaDB 11.4 service; `deploy.yml` needs it. Done 2026-11-26.
+- [x] `route:cache` back in the deploy (`artisan optimize`). Done 2026-11-26.
+- [x] Remove the Laravel skeleton workflows (`issues.yml`, `pull-requests.yml`, `update-changelog.yml`). Done 2026-11-26.
+- [ ] Staging: push to `main` → staging, tag `v*` → production, `workflow_dispatch` with an environment choice (move the SSH part into a reusable `hostinger.yml`).
+- [ ] Fail the deploy if the server `.env` is missing, `APP_KEY` is empty or `APP_DEBUG=true`.
+- [ ] Normalize the SSH key (strip CRLF) and validate it with `ssh-keygen -y` before connecting.
+- [ ] Move blog uploads from `public/blog_images` to `storage/app/public`, so rsync doesn't need an exclude to keep them.
+
+**Hostinger (one-time)**
+- [x] PHP 8.4 in hPanel (8.4.28 per the response headers, 2026-11-26).
+- [ ] Confirm the CLI `php` over SSH is also 8.4 (the deploy prints it and warns otherwise; set the `HOSTINGER_PHP_BIN` variable, e.g. `/opt/alt/php84/usr/bin/php`, if not) and that `intl`, `gd`, `zip`, `bcmath`, `exif` and `fileinfo` are enabled. Filament needs `intl`.
+- [ ] Staging subdomain (`testing.luane.online`) with its own database and `.env`.
+- [ ] Cron every minute: `cd <app> && php artisan schedule:run`.
+- [ ] Back up `public_html` and the database before the first Laravel 12 deploy.
 
 **GitHub (one-time)**
-- [ ] Create the environments `staging` and `production`, with the same names and different values.
-  - Secrets: `HOSTINGER_SSH_HOST`, `HOSTINGER_SSH_PORT` (usually `65002`), `HOSTINGER_SSH_USER`, `HOSTINGER_SSH_KEY` (private key, no passphrase), `HOSTINGER_APP_PATH`.
-  - Variables: `HOSTINGER_DOCROOT`, `SITE_URL`, optional `HOSTINGER_DOCROOT_KEEP` and `HOSTINGER_PHP`.
-- [ ] On `production`, allow deployments only from `v*` tags, and require a reviewer.
+- [ ] Secrets on `production`: `HOSTINGER_SSH_HOST`, `HOSTINGER_SSH_PORT`, `HOSTINGER_SSH_USER`, `HOSTINGER_SSH_KEY`, `HOSTINGER_DEPLOY_PATH`. Optional variable `HOSTINGER_PHP_BIN`. (Set? Not verifiable from here.)
+- [ ] With staging: allow `production` only from `v*` tags and require a reviewer.
 
 **Done when:**
-- a push to `main` deploys staging and the smoke test passes;
-- `git tag v1.0.0 && git push origin v1.0.0` deploys production;
+- a push to `main` runs the tests, deploys, and the smoke test passes;
 - a failed step leaves the site online (not stuck in maintenance mode);
-- `docs/deployment.md` documents the setup and rollback, like the reference's `docs/despliegue.md`;
+- (staging) `git tag v1.0.0 && git push origin v1.0.0` deploys production;
 - the unused `laravel-fans/docker` files (`docker/etc`, `docker/usr`, `docker/var`) are removed.
 
 ## Phase 0.5: Blog platform, SEO tool, semantic HTML
@@ -134,7 +118,9 @@ Design and reasoning: [design-blog-filament-seo.md](design-blog-filament-seo.md)
 ## Phase 3: Content and operations
 
 - [ ] **Tests**: feature tests for the public pages (home, portfolio, blog index, privacy) in both locales, project CRUD authorization, and the locale switcher.
-- [ ] **Deployment docs**: covered by Phase 0b (`docs/deployment.md`).
+- [x] **Deployment docs**: Hostinger over SSH via GitHub Actions (`.github/workflows/deploy.yml`), documented in `docs/development.md` → Deployment.
+- [x] **Fix `route:cache`** (#3) and add it back to the deploy workflow. Done 2026-11-26 (`artisan optimize`).
+- [x] **Run tests before deploy**: `tests.yml` with a MariaDB service, called by `deploy.yml`. Done 2026-11-26.
 - [ ] **Decide on Notion**: either delete `CurriculumVitae`, `NotionService`, `blog.blade.php` and `blogpost.blade.php`, or bring back a Notion-powered CV page on top of config-based IDs.
 - [ ] **CV page**: a downloadable or online CV (there is a commented-out link in the legacy `inWork` view).
 - [ ] **Analytics consent**: a cookie or consent banner for GA and Clarity, in line with the privacy policy text.

@@ -74,7 +74,8 @@ Deployment isn't built yet. The plan is GitHub Actions → Hostinger over SSH, c
 
 - **Route names must stay unique**, or `route:cache` / `optimize` (which the deploy runs) fail. `AccessControlTest::test_route_names_are_unique` catches this. Localized routes use the plain name (`home`, `portfolio`, `blog.index`); the unprefixed copies end in `.fallback`.
 - `SetLocale` removes `{locale}` from the route parameters, so controllers inside the `{locale}` group **can't** take a `$locale` argument. Use `app()->getLocale()` instead. `route()` fills in `locale` from `URL::defaults`.
-- `env()` is called directly in Blade views and controllers (`GOOGLE_TAG_ID`, `NOTION_*`). After `config:cache` these return `null`. Read them through `config()` instead.
+- Never call `env()` outside `config/`. Production runs `optimize` (`config:cache`), so `env()` returns `null` there. `GOOGLE_TAG_ID` and `NOTION_*` are read via `config('services.google.tag_id')` / `config('services.notion.*')`.
+- **Deploy:** every push to `main` runs the tests and then deploys to Hostinger (`.github/workflows/deploy.yml`, which calls `tests.yml`). CI and the dev image use PHP 8.4, like the server. See `docs/development.md` → Deployment.
 - Root `lang/` is ignored, because Laravel prefers `resources/lang/` when it exists.
 - `darkMode_button.js` runs on every page but the toggle only exists on single blog posts. Every other page throws a `TypeError` and never reaches `Alpine.start()`.
 - `.gitignore` excludes `*.png` and `*.jpg`, so `public/imgs/*` (profile photo, hero) is not in git.

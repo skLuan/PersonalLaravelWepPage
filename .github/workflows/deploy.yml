@@ -1,0 +1,207 @@
+name: Deploy to Hostinger
+
+# Runs the test suite (tests.yml), then builds the app in CI
+# (Composer --no-dev + Vite) and uploads it to the Hostinger server over SSH
+# with rsync. Nothing is uploaded if a test fails.
+#
+# Server layout (see scripts/hostinger/migrate-layout.sh):
+#   ~/domains/luane.online/              <- HOSTINGER_DEPLOY_PATH (Laravel root)
+#   ~/domains/luane.online/public_html   -> public   (only this is web-served)
+# The server keeps its own .env,
+# storage/, public/imgs/, public/blog_images/, images (gitignored) and
+# .htaccess files; rsync never touches them.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PHP_VERSION: '8.4'   # same as the server (hPanel, PHP/8.4.28), docker/app/Dockerfile and tests.yml
+  NODE_VERSION: '22'   # same as the node service in compose.yml
+
+jobs:
+  tests:
+    name: Tests
+    uses: ./.github/workflows/tests.yml
+
+  deploy:
+    name: Build and deploy
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://luane.online
+
+    env:
+      SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+      SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+      SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+      DEPLOY_PATH: ${{ secrets.HOSTINGER_DEPLOY_PATH }}
+      REMOTE_PHP: ${{ vars.HOSTINGER_PHP_BIN || 'php' }}
+
+    steps:
+      - name: Check required secrets
+        run: |
+          missing=0
+          for v in SSH_HOST SSH_PORT SSH_USER DEPLOY_PATH; do
+            if [ -z "${!v}" ]; then echo "::error::Missing secret HOSTINGER_${v#SSH_}"; missing=1; fi
+          done
+          if [ -z "${{ secrets.HOSTINGER_SSH_KEY }}" ]; then echo "::error::Missing secret HOSTINGER_SSH_KEY"; missing=1; fi
+          exit $missing
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, intl, pdo_mysql, zip, gd, bcmath, exif, fileinfo
+          coverage: none
+          tools: composer:v2
+
+      # post-autoload-dump runs artisan (package:discover, filament:upgrade), which
+      # wants a .env. This one stays on the runner: rsync excludes /.env.
+      - name: Install Composer dependencies (production)
+        run: |
+          cp .env.example .env
+          composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          # Filament's assets are gitignored; filament:upgrade publishes them.
+          test -f public/js/filament/filament/app.js || { echo '::error::Filament assets were not published'; ls -R public/js | head -40; exit 1; }
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Build front-end assets
+        run: |
+          npm ci
+          npm run build
+          test -f public/build/manifest.json
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<CFG
+          Host hostinger
+            HostName $SSH_HOST
+            Port $SSH_PORT
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+            ServerAliveInterval 30
+          CFG
+
+      - name: Check server layout
+        run: |
+          ssh hostinger "set -e
+            cd '$DEPLOY_PATH' || { echo '$DEPLOY_PATH does not exist'; exit 1; }
+            [ \"\$(basename \"\$PWD\")\" != public_html ] || { echo 'DEPLOY_PATH points inside public_html; it must be the folder above it'; exit 1; }
+            [ -f artisan ] || { echo 'artisan not found in DEPLOY_PATH'; exit 1; }
+            [ -L public_html ] && [ \"\$(readlink public_html)\" = public ] \
+              || { echo 'public_html is not a symlink to public. Run scripts/hostinger/migrate-layout.sh --apply first'; exit 1; }
+            if [ -e public/storage ] || [ -L public/storage ]; then
+              [ -L public/storage ] && [ \"\$(readlink -f public/storage)\" = \"\$(readlink -f storage/app/public)\" ] \
+                || { echo 'public/storage must be a symlink to storage/app/public (it exposes more than that). Fix: rm -rf public/storage && ln -s ../storage/app/public public/storage'; exit 1; }
+            fi
+            echo \"layout ok: \$PWD (public_html -> public)\""
+
+      # The web server's PHP (hPanel) and the SSH CLI 'php' can differ on Hostinger.
+      # composer.json needs >= 8.2; anything other than PHP_VERSION gets a warning.
+      - name: Check server PHP
+        run: |
+          remote=$(ssh hostinger "$REMOTE_PHP -r 'echo PHP_MAJOR_VERSION.\".\".PHP_MINOR_VERSION;'")
+          echo "server CLI ($REMOTE_PHP): PHP $remote · build: PHP $PHP_VERSION"
+          if [ "$(printf '%s\n' 8.2 "$remote" | sort -V | head -1)" != 8.2 ]; then
+            echo "::error::Server CLI PHP $remote is older than 8.2. Set the HOSTINGER_PHP_BIN variable (e.g. /opt/alt/php84/usr/bin/php)."
+            exit 1
+          fi
+          [ "$remote" = "$PHP_VERSION" ] || echo "::warning::Server CLI PHP $remote differs from the build ($PHP_VERSION). Set HOSTINGER_PHP_BIN or check hPanel."
+
+      - name: Maintenance mode on
+        run: ssh hostinger "cd '$DEPLOY_PATH' && $REMOTE_PHP artisan down --retry=15 || true"
+
+      - name: Upload files (rsync)
+        run: |
+          # 'protect /*' keeps top-level entries that are not in the repo
+          # (public_html symlink, backups, Hostinger files) from being deleted.
+          rsync -az --delete --no-perms --omit-dir-times --itemize-changes \
+            --filter='protect /*' \
+            --exclude='/public_html' \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='tests/' \
+            --exclude='docker/' \
+            --exclude='/docs/' \
+            --exclude='/compose.yml' \
+            --exclude='/.env' \
+            --exclude='/.env.*' \
+            --exclude='/storage/' \
+            --exclude='/bootstrap/cache/*.php' \
+            --exclude='/public/storage' \
+            --exclude='/public/imgs/' \
+            --exclude='/public/blog_images/' \
+            --filter='protect *.png' \
+            --filter='protect *.jpg' \
+            --filter='protect *.jpeg' \
+            --filter='protect *.webp' \
+            --exclude='/public/hot' \
+            --exclude='.htaccess' \
+            --exclude='error_log' \
+            --exclude='.well-known/' \
+            ./ hostinger:"$DEPLOY_PATH/" | tail -n 200
+
+      - name: Migrate and warm caches
+        run: |
+          ssh hostinger "set -e; cd '$DEPLOY_PATH'
+            # rsync never uploads bootstrap/cache/*.php, so the server keeps its old
+            # package manifest and cached config. Those can name providers that no
+            # longer exist (e.g. binshops after Laravel 12) and crash artisan on boot.
+            rm -f bootstrap/cache/*.php
+            $REMOTE_PHP artisan migrate --force
+            $REMOTE_PHP artisan optimize:clear
+            # config, events, routes and views (route names are unique since 2026-11-25)
+            $REMOTE_PHP artisan optimize
+            # Hostinger disables PHP symlink(), so storage:link is done with ln.
+            [ -e public/storage ] || ln -s ../storage/app/public public/storage"
+
+      - name: Maintenance mode off
+        if: always()
+        run: ssh hostinger "cd '$DEPLOY_PATH' && $REMOTE_PHP artisan up" || true
+
+      - name: Smoke test
+        run: |
+          failed=0
+          for p in / /en/portfolio /en/blog /es/blog /admin/login; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' -L "https://luane.online$p")
+            echo "$p -> $c"
+            [ "$c" = "200" ] || { echo "::error::$p returned $c"; failed=1; }
+          done
+          [ "$failed" = 0 ]
+          # Nothing outside public/ may be reachable from the web.
+          leak=0
+          for p in /.env /artisan /composer.json /composer.lock /public/index.php /vendor/autoload.php /storage/logs/laravel.log /storage/framework/sessions/; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' "https://luane.online$p")
+            echo "$p -> $c"
+            [ "$c" = "200" ] && { echo "::error::$p is publicly reachable"; leak=1; }
+          done
+          exit $leak
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_deploy

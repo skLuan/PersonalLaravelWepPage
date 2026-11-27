@@ -29,6 +29,37 @@ One entry per working session, **newest first**. Each entry records what was don
 
 ---
 
+## 2026-11-26: Deploy workflow on PHP 8.4, tests before deploy, `route:cache` back
+
+**Branch:** `develop/blog` (merge of `origin/main` in progress, **not committed**) · **Goal:** act on the deploy session's last notes: server now on PHP 8.4 but the workflow builds with 8.2; `nette/utils`/`nette/schema` only support up to 8.3; `route:cache` skipped; no tests before deploy.
+
+### Done
+- **nette:** the warning applied to the `composer.lock` on `main` (Laravel 10: `nette/utils` 4.0.4 `>=8.0 <8.4`, `nette/schema` 1.3.0 `8.1 - 8.3`). The Laravel 12 lock on `develop/blog` already has `nette/utils` 4.1.6 (`8.2 - 8.6`) and `nette/schema` 1.4.0 (`8.1 - 8.6`). No package update and no downgrade to 8.3 needed: server, CI and the dev image stay on **8.4**.
+- `git merge --no-commit origin/main` into `develop/blog`, to get `deploy.yml`, `scripts/hostinger/*` and the `env()` → `config()` fix (#10/#11). Conflicts resolved in `.env.example`, `CLAUDE.md`, `docs/development.md`, `docs/plan.md`, `journal.md` (kept both sides' entries) and `layouts/projects.blade.php` (kept deleted).
+- `tests.yml` rewritten: PHP 8.4 + MariaDB 11.4 service, Composer cache, `optimize` + `optimize:clear` check, `php artisan test`. Triggers: PRs, pushes to `develop/**`, `workflow_dispatch`, `workflow_call`.
+- `deploy.yml`: `tests` job (calls `tests.yml`) and `deploy` `needs: tests`; PHP 8.2 → 8.4, Node 20 → 22; `.env.example` copied before `composer install --no-dev` and a check that Filament assets were published; new "Check server PHP" step (fails < 8.2, warns ≠ 8.4); rsync also skips `docs/` and `compose.yml`; on the server `rm -f bootstrap/cache/*.php` then `migrate`, `optimize:clear`, **`optimize`** (includes `route:cache`); smoke test also checks `/en/portfolio`, `/en/blog`, `/es/blog`, `/admin/login`.
+- Removed the Laravel skeleton workflows `issues.yml`, `pull-requests.yml`, `update-changelog.yml` (they call `laravel/.github@main`).
+- Docs: `docs/development.md` (Deployment, tests, build), `docs/architecture.md`, `CLAUDE.md`, `docs/plan.md` (Phase 0b rewritten to match what exists; ticked #15, route:cache, tests before deploy).
+
+### ✅ Works (verified)
+- `luane-app` (PHP 8.4.28): `composer check-platform-reqs --no-dev` passes; installed `nette/utils` 4.1.6, `nette/schema` 1.4.0.
+- `route:cache` succeeds; `route:list` = 62 routes, no duplicate names; no `laravel/ui`, no `Auth::routes()`. So the "duplicate Breeze + laravel/ui routes" note only applied to the old `main` code.
+- After the merge: `php artisan test` **63 passed** (208 assertions); `optimize` + `optimize:clear` succeed (also caches blade-icons and Filament); `php -l` on the merged PHP files; `bash -n` on both Hostinger scripts; no `env()` outside `config/`.
+- Both workflow files parse as YAML (symfony/yaml) with the expected jobs and steps. The "Check server PHP" comparison logic was run locally for 8.4/8.3/8.1/8.10.
+- The deploy build step in a throwaway `luane-app:dev` container on a clean copy of the tree: `cp .env.example .env && composer install --no-dev …` exits 0 and publishes `public/{js,css,fonts}/filament`.
+- A stale `bootstrap/cache/packages.php` naming the binshops provider makes `php artisan` fail (`ProviderRepository.php` line 205); after `rm -f bootstrap/cache/*.php` it boots. That is why the deploy now deletes them.
+
+### ❔ Not verified
+- No workflow has run on GitHub with these changes (actionlint not available locally). The MariaDB service healthcheck (`healthcheck.sh`) is the one `compose.yml` uses, not tried on a runner.
+- The server CLI `php` over SSH (the web side shows 8.4.28 per the deploy session). Whether the `HOSTINGER_*` secrets are set.
+- The first Laravel 12 deploy itself: new migrations on the production DB, Filament's `intl` on Hostinger, sessions/cache drivers in the server `.env`.
+
+### Next
+- Commit the merge, push `develop/blog`, open the PR to `main` (Tests runs on the PR). Back up the production DB and `public_html` before merging: the merge deploys Laravel 12.
+- After the deploy: `blog:import-binshops` and `user:create --admin` over SSH (plan D2).
+
+---
+
 ## 2026-11-26: Unstyled :8080 (stale `public/hot`), temporary worktree container removed
 
 **Branch:** `claude/blog-filament-seo-migration-6c5c1d` · **Goal:** Luan saw :8080 render without CSS/JS, with CORS errors for `http://127.0.0.1:8000/@vite/client`, and asked whether `luane-fil-app` was the stack to use.
@@ -113,6 +144,37 @@ One entry per working session, **newest first**. Each entry records what was don
 - Phase 0.5-A: `SeoData` + `<x-seo>`, semantic home/portfolio, `/` redirect by language, sitemap, robots, `llms.txt`.
 - After deploying: run `blog:import-binshops` in production (plan item D2).
 - Clean up: `docker rm -f luane-fil-app`, plus the `luane_fil_vendor` and `luane_fil_node_modules` volumes and the `luane_fil`/`testing_fil` DBs when this worktree is done.
+
+---
+
+## 2026-11-25: GitHub Actions deploy to Hostinger
+
+**Branch:** `ci/deploy-hostinger` · **Goal:** deploy `main` to luane.online automatically.
+
+### Done
+- Added `.github/workflows/deploy.yml`: build in CI (Composer no-dev + Vite), rsync over SSH, migrate, cache, smoke test.
+- Fixed #10/#11: `GOOGLE_TAG_ID` and `NOTION_*` now go through `config/services.php`; keys added to `.env.example`.
+- Documented the deploy in `docs/development.md`.
+- Security: moved to a layout where only Laravel's `public/` is web-served (`public_html -> public`, app one level up). Added `scripts/hostinger/migrate-layout.sh` (one-time, dry run by default, backup) and `rollback-layout.sh`. The workflow checks the layout before deploying and fails if `/.env`, `/artisan`, etc. answer 200.
+
+### ✅ Works (verified)
+- `https://luane.online` answers 200 from Hostinger (`platform: hostinger`, `x-powered-by: PHP/8.2`).
+- Workflow passes `actionlint` and YAML parsing.
+- No `env()` calls left outside `config/` (`rg "env\(" app resources routes`).
+- Before the move (from outside): `/.env` 403, `/.git/config` 403 (a `.git` folder exists in `public_html`), `/storage/logs/laravel.log` 403, `/public/index.php` 200, `/composer.json` and `/artisan` 404. Protection relied entirely on the root `.htaccess`.
+- `migrate-layout.sh`, `rollback-layout.sh`, the layout check and the rsync filters were run against a simulated Hostinger folder with a fake `php`: files move up, `public_html -> public`, rsync deletes stale repo files only and keeps `.env`, `storage/`, `public/imgs`, `public/blog_images`, `.htaccess`, the symlink and unknown top-level folders.
+
+### ❌ Broken / not working
+- `route:cache` still fails (#3), so the workflow skips it.
+- 2026-11-26, after the manual migration: `https://luane.online/storage/logs/laravel.log` answered 200 (it showed the server path). `artisan storage:link` fails on Hostinger (`Call to undefined function Illuminate\Filesystem\symlink()`), and `public/storage` ended up exposing the whole `storage/` folder. Fix: `ln -s ../storage/app/public public/storage`. Scripts and workflow now use `ln` and the layout check rejects a wrong `public/storage`.
+
+### ❔ Not verified
+- The migration has not run on the real server. Hostinger is expected to follow the `public_html` symlink (common setup), but this is not verified.
+- The real server path, SSH user and whether `php` on the server CLI is 8.2. The workflow has not run yet because the secrets are not set.
+- PHP was not available in the session, so the config changes were not run through `php -l` (CI will).
+
+### Next
+- Run `migrate-layout.sh` on the server, set the `HOSTINGER_*` secrets (`HOSTINGER_DEPLOY_PATH=/home/<user>/domains/luane.online`), merge to `main`, watch the first run.
 
 ---
 
